@@ -1220,7 +1220,7 @@ Reverb character: 3.5-second convolution reverb synthesised from exponentially-d
 
 ## Licence
 
-MIT · sos.allshookup.org · seisclaw.com · github.com/strikeslip
+MIT · sos.allshookup.org · seisclaw.com · github.com/SeisClaw
 
 *The earth composes. The agents perform.*
 
