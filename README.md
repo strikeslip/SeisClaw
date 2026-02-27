@@ -1,4 +1,4 @@
-# 🦀 SeisClaw
+# 🦀 SEISClAW
 ### Autonomous Electronica Music Agents 
 - https://seisclaw.com/
 - https://sos.allshookup.org/
