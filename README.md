@@ -1,17 +1,17 @@
-# 🦀 SEISClAW
+# 🦀 SEISCLAW
 ### Autonomous Electronica Music Agents 
 - https://seisclaw.com/
 - https://sos.allshookup.org/
 
 ---
 
-## What Is SeisClaw 
+## What Is SEISCLAW 
 
-SeisClaw is a system of autonomous agents that listen to Earth's seismic activity and compose electronica music without human instruction. Each agent executes a continuous **SeisConduct** loop — Perceive, Reason, Plan, Act, Reflect — connecting to live global seismic sensor networks, parsing real binary waveform data, and executing synthesis decisions in a browser via the Web Audio API.
+SEISCLAW is a system of autonomous agents that listen to Earth's seismic activity and compose electronica music without human instruction. Each agent executes a continuous **SeisConduct** loop — Perceive, Reason, Plan, Act, Reflect — connecting to live global seismic sensor networks, parsing real binary waveform data, and executing synthesis decisions in a browser via the Web Audio API.
 
 The earth composes. The agents perform.
 
-SeisClaw is the agentic evolution of Sounds of Seismic (SOS), a concept in development since 2012. SOS instruments — ShadowZone, ONE, SEISFLOW, SEISTRONICA, ANMO FM Synth — require a human to initiate each session. SeisClaw agents begin composing after a single activation gesture and continue indefinitely, responding to planetary seismic activity across geological time.
+SEISCLAW is the agentic evolution of Sounds of Seismic (SOS), a concept in development since 2012. SOS instruments — ShadowZone, ONE, SEISFLOW, SEISTRONICA, ANMO FM Synth — require a human to initiate each session. SeisClaw agents begin composing after a single activation gesture and continue indefinitely, responding to planetary seismic activity across geological time.
 
 ShadowZone (sos.allshookup.org/ShadowZone.html) is the base instrument. Its three-layer granular synthesis engine, MiniSEED data pipeline, and seismic parameter mappings are the proven foundation on which SeisClaw's agentic architecture is to be built.
 
@@ -19,7 +19,7 @@ ShadowZone (sos.allshookup.org/ShadowZone.html) is the base instrument. Its thre
 
 ## Architecture: The SeisConduct Loop (SCLoop)
 
-Every SeisClaw agent executes five stages continuously and autonomously:
+Every SEISCLAW agent executes five stages continuously and autonomously:
 
 **Perceive** — Connect to USGS earthquake feeds and EarthScope/IRIS sensor networks. Fetch GeoJSON event data. Retrieve binary MiniSEED waveform records via FDSN web services. Parse raw waveform samples. Classify event signatures: tectonic rupture onset, deep-focus rumble, ocean microseism pulse, inter-event background noise.
 
@@ -43,7 +43,7 @@ SeisClaw deploys six synthesis techniques. Granular and FM are the primary compo
 
 Granular synthesis is the heart of ShadowZone and the primary engine of SeisClaw. It operates by generating a continuous stream of short audio events — grains — each with its own frequency, amplitude, duration, pan position, and envelope. The synthesis texture emerges from the collective behaviour of many grains rather than from any individual sound.
 
-SeisClaw implements three distinct granular clouds operating simultaneously:
+SEISCLAW implements three distinct granular clouds operating simultaneously:
 
 **Texture Cloud** — High-density, short-duration grains producing continuous textural wash. Parameters in SeisClaw: density 35–95 grains/second (driven by waveform amplitude), grain duration 35ms (spread ±50%), frequency spread ±1.2 octaves around root×4, pan spread ±1.0 (full stereo field), sine waveform, lowpass filter at 6kHz. The texture cloud's density and frequency spread are directly modulated by the instantaneous amplitude and derivative of the seismic waveform sample at the current playhead position.
 
@@ -59,9 +59,9 @@ In SeisClaw's expanded architecture, granular synthesis handles: coda wave seque
 
 FM (Frequency Modulation) synthesis generates complex timbres by modulating the frequency of a carrier oscillator with a modulator oscillator. The ratio of carrier frequency to modulator frequency (C:M ratio) determines the harmonic character; the modulation index (depth of frequency deviation) determines spectral complexity and brightness. Low modulation index produces clean harmonic tones; high modulation index produces dense, inharmonic, metallic textures.
 
-SeisClaw's ANMO FM Synth sibling instrument demonstrates the geological mapping: shallow earthquakes (brittle crust rupture, high-frequency P-wave content) map to high modulation index and wide spectral spread; deep-focus earthquakes (smooth rupture through ductile mantle material, attenuated high frequencies) map to low modulation index and narrow, fundamental-rich timbres.
+SEISCLAW's ANMO FM Synth sibling instrument demonstrates the geological mapping: shallow earthquakes (brittle crust rupture, high-frequency P-wave content) map to high modulation index and wide spectral spread; deep-focus earthquakes (smooth rupture through ductile mantle material, attenuated high frequencies) map to low modulation index and narrow, fundamental-rich timbres.
 
-In SeisClaw, FM synthesis handles: shallow crustal events (depth < 70km, where rupture characteristics produce rich harmonic content), P-wave onset events (sharp initial arrival, high derivative in waveform), significant events (M6.0+, where the spectral complexity of FM matches the geological violence of the rupture), and transition states between other synthesis modes.
+In SEISCLAW, FM synthesis handles: shallow crustal events (depth < 70km, where rupture characteristics produce rich harmonic content), P-wave onset events (sharp initial arrival, high derivative in waveform), significant events (M6.0+, where the spectral complexity of FM matches the geological violence of the rupture), and transition states between other synthesis modes.
 
 The geological-to-FM parameter mappings:
 
@@ -77,7 +77,7 @@ Event significance  → number of FM operators (2-operator for background, 4-ope
 
 Subtractive synthesis begins with a harmonically rich source (sawtooth, square, or noise) and sculpts timbre by removing frequency content through filtering. It is the appropriate engine for sustained, slowly-evolving geological conditions — deep-focus earthquakes and mantle events where seismic energy is attenuated into smooth, low-frequency rumble by the time it arrives at the sensor.
 
-In SeisClaw, subtractive synthesis handles: deep-focus events (depth > 300km, where the waveform is dominated by low-frequency energy), slow-onset events (low derivative, gradual energy buildup), teleseismic arrivals (events recorded from distant sources, characterised by long-period surface waves), and extended inter-event drone states.
+In SEISCLAW, subtractive synthesis handles: deep-focus events (depth > 300km, where the waveform is dominated by low-frequency energy), slow-onset events (low derivative, gradual energy buildup), teleseismic arrivals (events recorded from distant sources, characterised by long-period surface waves), and extended inter-event drone states.
 
 Parameter mappings:
 
@@ -92,7 +92,7 @@ Surface wave period → LFO rate modulating filter cutoff
 
 Additive synthesis constructs complex timbres by summing multiple sine wave oscillators, each at a specific frequency and amplitude. Where subtractive synthesis removes, additive synthesis builds from fundamentals up. It is computationally more expensive but offers precise control over harmonic content — particularly useful for events with clear harmonic structure in their waveforms.
 
-In SeisClaw, additive synthesis handles: harmonic tremor events (volcanic or tectonic tremor with clear periodic structure), events where spectral analysis reveals dominant frequency peaks that can be directly reproduced as partials, and MUZAK mode — the freeze state inherited from ShadowZone, where the waveform is held and the synthesis shifts to a more sustained, pitched character. In freeze mode, the additive engine constructs a chord from the current scale and root frequency, voiced according to the geological parameters of the frozen event.
+In SEISCLAW, additive synthesis handles: harmonic tremor events (volcanic or tectonic tremor with clear periodic structure), events where spectral analysis reveals dominant frequency peaks that can be directly reproduced as partials, and MUZAK mode — the freeze state inherited from ShadowZone, where the waveform is held and the synthesis shifts to a more sustained, pitched character. In freeze mode, the additive engine constructs a chord from the current scale and root frequency, voiced according to the geological parameters of the frozen event.
 
 Parameter mappings:
 
@@ -146,7 +146,7 @@ This section documents the complete pipeline from network query to normalised Fl
 
 ### Stage 1 — Event Discovery: USGS GeoJSON
 
-SeisClaw queries the USGS FDSN event service, not the static GeoJSON feed endpoints. This allows parameterised queries:
+SEISCLAW queries the USGS FDSN event service, not the static GeoJSON feed endpoints. This allows parameterised queries:
 
 ```javascript
 const CONFIG = {
