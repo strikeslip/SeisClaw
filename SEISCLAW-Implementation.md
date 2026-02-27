@@ -1,4 +1,4 @@
-# SEISCLAW Level 4: Hybrid Architecture Implementation Manual
+# SEISCLAW Hybrid Architecture Implementation Manual
 
 ## Autonomous Seismic Sonification with AI-Curated Deterministic Synthesis
 
