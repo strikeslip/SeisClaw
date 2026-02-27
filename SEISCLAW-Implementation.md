@@ -2,9 +2,10 @@
 
 ## Autonomous Seismic Sonification with AI-Curated Deterministic Synthesis
 
-**Version:** 0.1.0-draft
-**Project:** SEISCLAW - https://seisclaw.com/ | Sounds of Seismic (SOS) - https://sos.allshookup.org/
-**Repository:** https://github.com/strikeslip/SeisClaw
+**Version:** 0.1.0-draft <br>
+**SEISCLAW:** SEISCLAW - https://seisclaw.com/ <br>
+**SOS:** Sounds of Seismic (SOS) - https://sos.allshookup.org/ <br>
+**Repository:** https://github.com/strikeslip/SeisClaw<br>
 **Date:** February 27, 2026
 
 ---
@@ -37,7 +38,7 @@ SEISCLAW - https://seisclaw.com/ - Level 4 is a hybrid architecture that maintai
 ```
 ┌──────────────────────────────────────────────────────────────────┐
 │  LAYER 1: SEISMIC DATA PIPELINE                                  │
-│  USGS GeoJSON → EarthScope FDSN → MiniSEED ArrayBuffer          │
+│  USGS GeoJSON → EarthScope FDSN → MiniSEED ArrayBuffer           │
 └──────────────────────┬───────────────────────────────────────────┘
                        │
 ┌──────────────────────▼───────────────────────────────────────────┐
@@ -46,8 +47,8 @@ SEISCLAW - https://seisclaw.com/ - Level 4 is a hybrid architecture that maintai
 │  P/S wave ratio · Zero-crossing rate · RMS energy · Derivative   │
 └──────────┬───────────────────────────────────┬───────────────────┘
            │                                   │
-┌──────────▼──────────┐          ┌─────────────▼───────────────────┐
-│  LAYER 3: SYNTHESIS  │          │  LAYER 5: AI AGENT LAYER        │
+┌──────────▼────── ────┐          ┌─────────────▼───────────────── ──┐
+│  LAYER 3: SYNTHESIS  │          │  LAYER 5: AI AGENT LAYER         │
 │  ENGINE SUITE        │          │  (Optional — Compositional       │
 │                      │          │   Curation via LLM API)          │
 │  • FM Synthesis      │          │                                  │
@@ -61,20 +62,20 @@ SEISCLAW - https://seisclaw.com/ - Level 4 is a hybrid architecture that maintai
 │  (Deterministic      │          │                                  │
 │   fallback always    │          │  Fallback: Router operates       │
 │   available)         │          │   deterministically if AI fails  │
-└──────────┬──────────┘          └─────────────────────────────────┘
+└──────────┬───────────┘          └──────────────────────────────────┘
            │
 ┌──────────▼──────────┐
-│  LAYER 6: WEB AUDIO  │
-│  OUTPUT              │
-│                      │
-│  AudioContext →       │
-│  AudioWorklet →      │
-│  Destination         │
-│                      │
-│  0 RTF               │
-│  Sub-ms scheduling   │
-│  Sample-level        │
-│  precision           │
+│  LAYER 6: WEB AUDIO │
+│  OUTPUT             │
+│                     │
+│  AudioContext →     │
+│  AudioWorklet →     │
+│  Destination        │
+│                     │
+│  0 RTF              │
+│  Sub-ms scheduling  │
+│  Sample-level       │
+│  precision          │
 └─────────────────────┘
 ```
 
