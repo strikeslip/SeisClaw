@@ -4,8 +4,8 @@
 
 **Version:** 0.1.0-draft
 **Project:** SEISCLAW - https://seisclaw.com/ | Sounds of Seismic (SOS) - https://sos.allshookup.org/
-**Repository:** github.com/strikeslip - https://github.com/strikeslip
-**Date:** February 2026
+**Repository:** https://github.com/strikeslip/SeisClaw
+**Date:** February 27, 2026
 
 ---
 
