@@ -1,0 +1,1855 @@
+<!--
+S E I S C L A W - [SOS - Sounds Of Seismic] 
+https://seisclaw.com/ - https://sos.allshookup.org/
+Copyright (c) [2026] [SHOOK]
+
+Seismic Waveform Electronica
+- Three-layer granular synthesis (Texture/Tone/Rhythm)
+- Harmonic scale quantization
+- SeisClaw visualization with P-wave ray tracing
+- MUZAK mode with floating note status indicator
+- Mobile responsive (iOS/Android)
+- https://github.com/strikeslip/Complexity/blob/main/constructs/ShadowZones/SOS-ShadowZone-Analysis.md
+
+- Sweet Love For Planet Earth
+
+v3 - 8 Mar 2026: EarthScope cloud migration fix
+  - Instant-start: synthetic waveform plays immediately, real data hot-swaps in background
+  - Skip zero-sample records (szsrecs default removed in cloud transition)
+  - Add &nodata=404 for proper empty-response handling
+  - Add 15s fetch timeout for AWS latency resilience
+  - Validate SEED record headers before parsing
+
+v5 - 10 Mar 2026: GeoCSV simplification
+  - Replace binary miniSEED parser with plain-text GeoCSV format
+  - Eliminate Steim decoder, binary record parsing, zero-sample handling
+  - 10-line parser replaces ~170 lines of binary decoding
+  - Same instant-start + hot-swap architecture
+
+SeisClaw - SOS is free software: MIT License (https://opensource.org/license/mit)
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.5, maximum-scale=5.0, user-scalable=yes">
+    <meta charset="UTF-8">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>S E I S C L A W</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj4KICA8IS0tIGRhcmsgYmFja2dyb3VuZCAtLT4KICA8cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iIzA2MDYwYSIvPgogIAogIDwhLS0gQk9EWTogbWFpbiBvdmFsIHRvcnNvIC0tPgogIDxlbGxpcHNlIGN4PSI1MCIgY3k9IjU1IiByeD0iMjIiIHJ5PSIxNiIgZmlsbD0iI2NjNDQyMiIvPgogIAogIDwhLS0gQ0FSQVBBQ0UgaGlnaGxpZ2h0IC0tPgogIDxlbGxpcHNlIGN4PSI1MCIgY3k9IjUwIiByeD0iMjAiIHJ5PSIxMyIgZmlsbD0iI2RkNTUzMyIvPgogIDxlbGxpcHNlIGN4PSI1MCIgY3k9IjQ4IiByeD0iMTQiIHJ5PSI4IiBmaWxsPSIjZWU2NjQ0IiBvcGFjaXR5PSIwLjUiLz4KCiAgPCEtLSBMRUZUIENMQVcgKGxhcmdlKSAtLT4KICA8cGF0aCBkPSJNMjggNTIgUTE0IDQyIDEwIDM0IFE4IDI4IDE0IDI2IFEyMCAyNCAyMiAzMCBRMjQgMzUgMjggNDAgWiIgZmlsbD0iI2NjNDQyMiIvPgogIDwhLS0gbGVmdCBjbGF3IHVwcGVyIHBpbmNlciAtLT4KICA8cGF0aCBkPSJNMTQgMjYgUTEwIDE4IDE2IDE2IFEyMiAxNSAyMiAyMiBRMjAgMjYgMTQgMjYgWiIgZmlsbD0iI2RkNTUzMyIvPgogIDwhLS0gbGVmdCBjbGF3IGxvd2VyIHBpbmNlciAtLT4KICA8cGF0aCBkPSJNMTQgMjYgUTggMjggOCAzNCBRMTAgMzggMTQgMzQgUTE2IDMwIDE0IDI2IFoiIGZpbGw9IiNiYjMzMTEiLz4KCiAgPCEtLSBSSUdIVCBDTEFXIChsYXJnZSkgLS0+CiAgPHBhdGggZD0iTTcyIDUyIFE4NiA0MiA5MCAzNCBROTIgMjggODYgMjYgUTgwIDI0IDc4IDMwIFE3NiAzNSA3MiA0MCBaIiBmaWxsPSIjY2M0NDIyIi8+CiAgPCEtLSByaWdodCBjbGF3IHVwcGVyIHBpbmNlciAtLT4KICA8cGF0aCBkPSJNODYgMjYgUTkwIDE4IDg0IDE2IFE3OCAxNSA3OCAyMiBRODAgMjYgODYgMjYgWiIgZmlsbD0iI2RkNTUzMyIvPgogIDwhLS0gcmlnaHQgY2xhdyBsb3dlciBwaW5jZXIgLS0+CiAgPHBhdGggZD0iTTg2IDI2IFE5MiAyOCA5MiAzNCBROTAgMzggODYgMzQgUTg0IDMwIDg2IDI2IFoiIGZpbGw9IiNiYjMzMTEiLz4KCiAgPCEtLSBMRUZUIExFR1MgKDMgcGFpcnMpIC0tPgogIDxsaW5lIHgxPSIzNSIgeTE9IjYwIiB4Mj0iMjAiIHkyPSI3MiIgc3Ryb2tlPSIjY2M0NDIyIiBzdHJva2Utd2lkdGg9IjMuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CiAgPGxpbmUgeDE9IjMyIiB5MT0iNjQiIHgyPSIxNiIgeTI9Ijc4IiBzdHJva2U9IiNiYjMzMTEiIHN0cm9rZS13aWR0aD0iMyIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CiAgPGxpbmUgeDE9IjMwIiB5MT0iNjgiIHgyPSIxOCIgeTI9Ijg0IiBzdHJva2U9IiNhYTIyMDAiIHN0cm9rZS13aWR0aD0iMi41IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KCiAgPCEtLSBSSUdIVCBMRUdTICgzIHBhaXJzKSAtLT4KICA8bGluZSB4MT0iNjUiIHkxPSI2MCIgeDI9IjgwIiB5Mj0iNzIiIHN0cm9rZT0iI2NjNDQyMiIgc3Ryb2tlLXdpZHRoPSIzLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogIDxsaW5lIHgxPSI2OCIgeTE9IjY0IiB4Mj0iODQiIHkyPSI3OCIgc3Ryb2tlPSIjYmIzMzExIiBzdHJva2Utd2lkdGg9IjMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogIDxsaW5lIHgxPSI3MCIgeTE9IjY4IiB4Mj0iODIiIHkyPSI4NCIgc3Ryb2tlPSIjYWEyMjAwIiBzdHJva2Utd2lkdGg9IjIuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CgogIDwhLS0gRVlFUyBvbiBzdGFsa3MgLS0+CiAgPGxpbmUgeDE9IjQyIiB5MT0iNDIiIHgyPSIzOCIgeTI9IjM0IiBzdHJva2U9IiNkZDU1MzMiIHN0cm9rZS13aWR0aD0iMi41IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KICA8Y2lyY2xlIGN4PSIzOCIgY3k9IjMyIiByPSI0IiBmaWxsPSIjZmY2YTNkIi8+CiAgPGNpcmNsZSBjeD0iMzgiIGN5PSIzMiIgcj0iMiIgZmlsbD0iIzA2MDYwYSIvPgoKICA8bGluZSB4MT0iNTgiIHkxPSI0MiIgeDI9IjYyIiB5Mj0iMzQiIHN0cm9rZT0iI2RkNTUzMyIgc3Ryb2tlLXdpZHRoPSIyLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogIDxjaXJjbGUgY3g9IjYyIiBjeT0iMzIiIHI9IjQiIGZpbGw9IiNmZjZhM2QiLz4KICA8Y2lyY2xlIGN4PSI2MiIgY3k9IjMyIiByPSIyIiBmaWxsPSIjMDYwNjBhIi8+CgogIDwhLS0gQU5URU5OQUUgLS0+CiAgPHBhdGggZD0iTTQyIDQyIFEzMiAyOCAyOCAxOCIgc3Ryb2tlPSIjZWU2NjQ0IiBzdHJva2Utd2lkdGg9IjEuNSIgZmlsbD0ibm9uZSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CiAgPHBhdGggZD0iTTU4IDQyIFE2OCAyOCA3MiAxOCIgc3Ryb2tlPSIjZWU2NjQ0IiBzdHJva2Utd2lkdGg9IjEuNSIgZmlsbD0ibm9uZSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+Cjwvc3ZnPgo=">
+    <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj4KICA8IS0tIGRhcmsgYmFja2dyb3VuZCAtLT4KICA8cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iIzA2MDYwYSIvPgogIAogIDwhLS0gQk9EWTogbWFpbiBvdmFsIHRvcnNvIC0tPgogIDxlbGxpcHNlIGN4PSI1MCIgY3k9IjU1IiByeD0iMjIiIHJ5PSIxNiIgZmlsbD0iI2NjNDQyMiIvPgogIAogIDwhLS0gQ0FSQVBBQ0UgaGlnaGxpZ2h0IC0tPgogIDxlbGxpcHNlIGN4PSI1MCIgY3k9IjUwIiByeD0iMjAiIHJ5PSIxMyIgZmlsbD0iI2RkNTUzMyIvPgogIDxlbGxpcHNlIGN4PSI1MCIgY3k9IjQ4IiByeD0iMTQiIHJ5PSI4IiBmaWxsPSIjZWU2NjQ0IiBvcGFjaXR5PSIwLjUiLz4KCiAgPCEtLSBMRUZUIENMQVcgKGxhcmdlKSAtLT4KICA8cGF0aCBkPSJNMjggNTIgUTE0IDQyIDEwIDM0IFE4IDI4IDE0IDI2IFEyMCAyNCAyMiAzMCBRMjQgMzUgMjggNDAgWiIgZmlsbD0iI2NjNDQyMiIvPgogIDwhLS0gbGVmdCBjbGF3IHVwcGVyIHBpbmNlciAtLT4KICA8cGF0aCBkPSJNMTQgMjYgUTEwIDE4IDE2IDE2IFEyMiAxNSAyMiAyMiBRMjAgMjYgMTQgMjYgWiIgZmlsbD0iI2RkNTUzMyIvPgogIDwhLS0gbGVmdCBjbGF3IGxvd2VyIHBpbmNlciAtLT4KICA8cGF0aCBkPSJNMTQgMjYgUTggMjggOCAzNCBRMTAgMzggMTQgMzQgUTE2IDMwIDE0IDI2IFoiIGZpbGw9IiNiYjMzMTEiLz4KCiAgPCEtLSBSSUdIVCBDTEFXIChsYXJnZSkgLS0+CiAgPHBhdGggZD0iTTcyIDUyIFE4NiA0MiA5MCAzNCBROTIgMjggODYgMjYgUTgwIDI0IDc4IDMwIFE3NiAzNSA3MiA0MCBaIiBmaWxsPSIjY2M0NDIyIi8+CiAgPCEtLSByaWdodCBjbGF3IHVwcGVyIHBpbmNlciAtLT4KICA8cGF0aCBkPSJNODYgMjYgUTkwIDE4IDg0IDE2IFE3OCAxNSA3OCAyMiBRODAgMjYgODYgMjYgWiIgZmlsbD0iI2RkNTUzMyIvPgogIDwhLS0gcmlnaHQgY2xhdyBsb3dlciBwaW5jZXIgLS0+CiAgPHBhdGggZD0iTTg2IDI2IFE5MiAyOCA5MiAzNCBROTAgMzggODYgMzQgUTg0IDMwIDg2IDI2IFoiIGZpbGw9IiNiYjMzMTEiLz4KCiAgPCEtLSBMRUZUIExFR1MgKDMgcGFpcnMpIC0tPgogIDxsaW5lIHgxPSIzNSIgeTE9IjYwIiB4Mj0iMjAiIHkyPSI3MiIgc3Ryb2tlPSIjY2M0NDIyIiBzdHJva2Utd2lkdGg9IjMuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CiAgPGxpbmUgeDE9IjMyIiB5MT0iNjQiIHgyPSIxNiIgeTI9Ijc4IiBzdHJva2U9IiNiYjMzMTEiIHN0cm9rZS13aWR0aD0iMyIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CiAgPGxpbmUgeDE9IjMwIiB5MT0iNjgiIHgyPSIxOCIgeTI9Ijg0IiBzdHJva2U9IiNhYTIyMDAiIHN0cm9rZS13aWR0aD0iMi41IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KCiAgPCEtLSBSSUdIVCBMRUdTICgzIHBhaXJzKSAtLT4KICA8bGluZSB4MT0iNjUiIHkxPSI2MCIgeDI9IjgwIiB5Mj0iNzIiIHN0cm9rZT0iI2NjNDQyMiIgc3Ryb2tlLXdpZHRoPSIzLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogIDxsaW5lIHgxPSI2OCIgeTE9IjY0IiB4Mj0iODQiIHkyPSI3OCIgc3Ryb2tlPSIjYmIzMzExIiBzdHJva2Utd2lkdGg9IjMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogIDxsaW5lIHgxPSI3MCIgeTE9IjY4IiB4Mj0iODIiIHkyPSI4NCIgc3Ryb2tlPSIjYWEyMjAwIiBzdHJva2Utd2lkdGg9IjIuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CgogIDwhLS0gRVlFUyBvbiBzdGFsa3MgLS0+CiAgPGxpbmUgeDE9IjQyIiB5MT0iNDIiIHgyPSIzOCIgeTI9IjM0IiBzdHJva2U9IiNkZDU1MzMiIHN0cm9rZS13aWR0aD0iMi41IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KICA8Y2lyY2xlIGN4PSIzOCIgY3k9IjMyIiByPSI0IiBmaWxsPSIjZmY2YTNkIi8+CiAgPGNpcmNsZSBjeD0iMzgiIGN5PSIzMiIgcj0iMiIgZmlsbD0iIzA2MDYwYSIvPgoKICA8bGluZSB4MT0iNTgiIHkxPSI0MiIgeDI9IjYyIiB5Mj0iMzQiIHN0cm9rZT0iI2RkNTUzMyIgc3Ryb2tlLXdpZHRoPSIyLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogIDxjaXJjbGUgY3g9IjYyIiBjeT0iMzIiIHI9IjQiIGZpbGw9IiNmZjZhM2QiLz4KICA8Y2lyY2xlIGN4PSI2MiIgY3k9IjMyIiByPSIyIiBmaWxsPSIjMDYwNjBhIi8+CgogIDwhLS0gQU5URU5OQUUgLS0+CiAgPHBhdGggZD0iTTQyIDQyIFEzMiAyOCAyOCAxOCIgc3Ryb2tlPSIjZWU2NjQ0IiBzdHJva2Utd2lkdGg9IjEuNSIgZmlsbD0ibm9uZSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CiAgPHBhdGggZD0iTTU4IDQyIFE2OCAyOCA3MiAxOCIgc3Ryb2tlPSIjZWU2NjQ0IiBzdHJva2Utd2lkdGg9IjEuNSIgZmlsbD0ibm9uZSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+Cjwvc3ZnPgo=">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        :root {
+            --bg-deep: #06060a;
+            --bg-surface: #0a0a10;
+            --text-primary: #e8e8ec;
+            --text-secondary: #7a7a88;
+            --text-dim: #3a3a48;
+            --accent: #ff6a3d;
+            --accent-dim: #4a2a1a;
+            --shadow-red: #ff4444;
+            --earth-mantle: #1a2a3a;
+            --earth-core: #5a3a2a;
+            --station-green: #4aff9e;
+            --texture-color: #ff6a3d;
+            --tone-color: #4aff9e;
+            --rhythm-color: #4a9eff;
+        }
+        
+        html, body {
+            height: 100%;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Mono', 'Fira Code', 'Consolas', monospace;
+            background: var(--bg-deep);
+            color: var(--text-primary);
+            min-height: 100vh;
+            min-height: -webkit-fill-available;
+            display: -webkit-flex;
+            display: flex;
+            -webkit-flex-direction: column;
+            flex-direction: column;
+            -webkit-align-items: center;
+            align-items: center;
+            padding: 12px;
+            padding-top: max(12px, env(safe-area-inset-top));
+            padding-bottom: max(12px, env(safe-area-inset-bottom));
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 900px;
+            display: -webkit-flex;
+            display: flex;
+            -webkit-flex-direction: column;
+            flex-direction: column;
+            -webkit-align-items: center;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 4px;
+        }
+        
+        .title {
+            font-size: clamp(11px, 3vw, 13px);
+            letter-spacing: clamp(3px, 1.5vw, 6px);
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
+        
+        .subtitle {
+            font-size: clamp(8px, 2vw, 9px);
+            letter-spacing: 2px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+        }
+        
+        .shadowzone-container {
+            width: 100%;
+            aspect-ratio: 16/9;
+            max-height: min(420px, 50vh);
+            background: var(--bg-surface);
+            border-radius: 6px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 0 80px rgba(255, 68, 68, 0.1);
+            touch-action: manipulation;
+        }
+        
+        /* [COMPAT] aspect-ratio fallback for older browsers */
+        @supports not (aspect-ratio: 16/9) {
+            .shadowzone-container {
+                height: 0;
+                padding-bottom: 56.25%; /* 9/16 = 0.5625 */
+            }
+            .shadowzone-container > canvas {
+                position: absolute;
+                top: 0;
+                left: 0;
+            }
+        }
+        
+        #shadowCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+        
+        .layer-toggles {
+            display: -webkit-flex;
+            display: flex;
+            gap: 8px;
+            -webkit-flex-wrap: wrap;
+            flex-wrap: wrap;
+            -webkit-justify-content: center;
+            justify-content: center;
+        }
+        
+        .layer-toggle {
+            padding: 6px 14px;
+            font-size: clamp(8px, 2vw, 9px);
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            border: 1px solid;
+            border-radius: 3px;
+            cursor: pointer;
+            -webkit-transition: all 0.2s ease;
+            transition: all 0.2s ease;
+            background: transparent;
+            font-family: inherit;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        .layer-toggle.texture { border-color: var(--texture-color); color: var(--texture-color); }
+        .layer-toggle.texture.active { background: var(--texture-color); color: var(--bg-deep); }
+        .layer-toggle.tone { border-color: var(--tone-color); color: var(--tone-color); }
+        .layer-toggle.tone.active { background: var(--tone-color); color: var(--bg-deep); }
+        .layer-toggle.rhythm { border-color: var(--rhythm-color); color: var(--rhythm-color); }
+        .layer-toggle.rhythm.active { background: var(--rhythm-color); color: var(--bg-deep); }
+        
+        .controls-panel {
+            display: -webkit-flex;
+            display: flex;
+            gap: 16px;
+            padding: 10px 16px;
+            background: var(--bg-surface);
+            border-radius: 4px;
+            -webkit-flex-wrap: wrap;
+            flex-wrap: wrap;
+            -webkit-justify-content: center;
+            justify-content: center;
+            width: 100%;
+            max-width: 500px;
+        }
+        
+        .control-group {
+            display: -webkit-flex;
+            display: flex;
+            -webkit-flex-direction: column;
+            flex-direction: column;
+            -webkit-align-items: center;
+            align-items: center;
+            gap: 3px;
+            min-width: 70px;
+        }
+        
+        .control-group label {
+            font-size: clamp(7px, 1.8vw, 8px);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--text-dim);
+        }
+        
+        .control-group select {
+            background: var(--bg-deep);
+            color: var(--text-primary);
+            border: 1px solid var(--text-dim);
+            padding: 4px 6px;
+            border-radius: 2px;
+            font-family: inherit;
+            font-size: clamp(9px, 2.2vw, 10px);
+            min-width: 70px;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+        
+        .control-group input[type="range"] { width: 70px; accent-color: var(--accent); }
+        .control-group .value { font-size: clamp(9px, 2.2vw, 10px); color: var(--accent); }
+        
+        .main-controls {
+            display: -webkit-flex;
+            display: flex;
+            gap: 10px;
+            -webkit-flex-wrap: wrap;
+            flex-wrap: wrap;
+            -webkit-justify-content: center;
+            justify-content: center;
+        }
+        
+        button.main-btn {
+            background: transparent;
+            border: 1px solid var(--text-dim);
+            color: var(--text-secondary);
+            font-family: inherit;
+            font-size: clamp(10px, 2.5vw, 11px);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            padding: 10px 24px;
+            cursor: pointer;
+            -webkit-transition: all 0.3s ease;
+            transition: all 0.3s ease;
+            border-radius: 3px;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+        
+        button.main-btn:hover:not(:disabled) {
+            border-color: var(--accent);
+            color: var(--accent);
+            box-shadow: 0 0 20px rgba(255, 106, 61, 0.2);
+        }
+        
+        button.main-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+        button.main-btn.active { background: var(--accent); border-color: var(--accent); color: var(--bg-deep); }
+        
+        button.freeze-btn.frozen {
+            background: -webkit-linear-gradient(315deg, #ffaa00, #ff6a3d);
+            background: linear-gradient(135deg, #ffaa00, #ff6a3d);
+            border-color: #ffaa00;
+            color: var(--bg-deep);
+            -webkit-animation: muzakPulse 2s ease-in-out infinite;
+            animation: muzakPulse 2s ease-in-out infinite;
+        }
+        
+        @-webkit-keyframes muzakPulse {
+            0%, 100% { opacity: 1; box-shadow: 0 0 20px rgba(255, 170, 0, 0.4); }
+            50% { opacity: 0.85; box-shadow: 0 0 30px rgba(255, 170, 0, 0.6); }
+        }
+        @keyframes muzakPulse {
+            0%, 100% { opacity: 1; box-shadow: 0 0 20px rgba(255, 170, 0, 0.4); }
+            50% { opacity: 0.85; box-shadow: 0 0 30px rgba(255, 170, 0, 0.6); }
+        }
+        
+        .status {
+            text-align: center;
+            font-size: clamp(9px, 2.2vw, 10px);
+            color: var(--text-dim);
+            line-height: 1.8;
+            min-height: 45px;
+            padding: 0 10px;
+        }
+        
+        .status a { color: var(--accent); text-decoration: none; }
+        .status .magnitude { color: var(--shadow-red); font-size: clamp(11px, 2.8vw, 13px); font-weight: 600; }
+        .status .location { color: var(--text-secondary); }
+        
+        .metrics {
+            display: -webkit-flex;
+            display: flex;
+            gap: 20px;
+            font-size: clamp(7px, 1.8vw, 8px);
+            color: var(--text-dim);
+            -webkit-flex-wrap: wrap;
+            flex-wrap: wrap;
+            -webkit-justify-content: center;
+            justify-content: center;
+        }
+        
+        .metric { display: -webkit-flex; display: flex; -webkit-flex-direction: column; flex-direction: column; -webkit-align-items: center; align-items: center; gap: 2px; }
+        .metric-value { font-size: clamp(12px, 3vw, 14px); font-weight: 300; }
+        .metric-value.texture { color: var(--texture-color); }
+        .metric-value.tone { color: var(--tone-color); }
+        .metric-value.rhythm { color: var(--rhythm-color); }
+        .metric-label { text-transform: uppercase; letter-spacing: 1px; }
+        
+        .loading .shadowzone-container { -webkit-animation: glow 2s ease-in-out infinite; animation: glow 2s ease-in-out infinite; }
+        
+        @-webkit-keyframes glow {
+            0%, 100% { box-shadow: 0 0 40px rgba(255, 68, 68, 0.1); }
+            50% { box-shadow: 0 0 80px rgba(255, 68, 68, 0.2); }
+        }
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 40px rgba(255, 68, 68, 0.1); }
+            50% { box-shadow: 0 0 80px rgba(255, 68, 68, 0.2); }
+        }
+        
+        @media (max-width: 480px) {
+            body { padding: 8px; }
+            .container { gap: 10px; }
+            .controls-panel { gap: 12px; padding: 8px 12px; }
+            .control-group { min-width: 60px; }
+            .control-group input[type="range"] { width: 60px; }
+            button.main-btn { padding: 8px 18px; }
+            .metrics { gap: 16px; }
+        }
+        
+        @media (max-height: 500px) and (orientation: landscape) {
+            .shadowzone-container { max-height: 45vh; }
+            .container { gap: 8px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="title">S E I S C L A W </div>
+            <div class="subtitle">Seismic Waveform Electronica</div>
+        </div>
+        
+        <div class="shadowzone-container">
+            <canvas id="shadowCanvas"></canvas>
+        </div>
+        
+        <div class="layer-toggles">
+            <button class="layer-toggle texture active" id="toggleTexture">Texture</button>
+            <button class="layer-toggle tone active" id="toggleTone">Tone</button>
+            <button class="layer-toggle rhythm active" id="toggleRhythm">Rhythm</button>
+        </div>
+        
+        <div class="controls-panel" id="controlsPanel">
+            <div class="control-group">
+                <label>Scale</label>
+                <select id="scaleSelect">
+                    <option value="pentatonic" selected>Pentatonic</option>
+                    <option value="minor">Minor</option>
+                    <option value="dorian">Dorian</option>
+                    <option value="harmonic">Harmonic</option>
+                    <option value="fifths">Fifths</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label>Root</label>
+                <select id="rootSelect">
+                    <option value="55">A1</option>
+                    <option value="73.42">D2</option>
+                    <option value="82.41">E2</option>
+                    <option value="110" selected>A2</option>
+                    <option value="146.83">D3</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label>Stretch</label>
+                <input type="range" id="stretchSlider" min="0.25" max="3" step="0.25" value="1">
+                <span class="value" id="stretchValue">1.0&#215;</span>
+            </div>
+            <div class="control-group">
+                <label>Reverb</label>
+                <input type="range" id="reverbSlider" min="0" max="100" step="5" value="45">
+                <span class="value" id="reverbValue">45%</span>
+            </div>
+        </div>
+        
+        <div class="metrics">
+            <div class="metric">
+                <div class="metric-value texture" id="textureValue">&mdash;</div>
+                <div class="metric-label">Texture</div>
+            </div>
+            <div class="metric">
+                <div class="metric-value tone" id="toneValue">&mdash;</div>
+                <div class="metric-label">Tone</div>
+            </div>
+            <div class="metric">
+                <div class="metric-value rhythm" id="rhythmValue">&mdash;</div>
+                <div class="metric-label">Rhythm</div>
+            </div>
+            <div class="metric">
+                <div class="metric-value" id="filterValue">&mdash;</div>
+                <div class="metric-label">Filter</div>
+            </div>
+        </div>
+        
+        <div class="main-controls">
+            <button class="main-btn" id="startBtn">Begin</button>
+            <button class="main-btn freeze-btn" id="freezeBtn" disabled>Muzak</button>
+            <button class="main-btn" id="stopBtn" disabled>End</button>
+        </div>
+        
+        <div class="status" id="status">
+            Shadow zone visualization with three-layer granular synthesis<br>
+            Press Begin to sonify Earth's seismic voice
+        </div>
+        
+ <div style="display:flex;display:-webkit-flex;align-items:center;-webkit-align-items:center;justify-content:center;-webkit-justify-content:center;gap:14px;padding:10px 0 4px;">
+            <a href="https://sos.allshookup.org/" target="_blank" rel="noopener noreferrer" style="font-family:inherit;font-size:clamp(9px,2.2vw,11px);letter-spacing:3px;text-transform:uppercase;color:#ffffff;text-decoration:none;">SOS</a>
+            <span style="color:#3a3a4a;font-size:11px;">&middot;</span>
+            <a href="https://github.com/strikeslip/SeisClaw" target="_blank" rel="noopener noreferrer" style="font-family:inherit;font-size:clamp(9px,2.2vw,11px);letter-spacing:3px;text-transform:uppercase;color:#ffffff;text-decoration:none;">GitHub</a>
+            <span style="color:#3a3a4a;font-size:11px;">&middot;</span>
+            <a href="https://github.com/strikeslip/SeisClaw/blob/main/SKILL.md" target="_blank" rel="noopener noreferrer" style="font-family:inherit;font-size:clamp(9px,2.2vw,11px);letter-spacing:3px;text-transform:uppercase;color:#ffffff;text-decoration:none;">Skills</a>
+        </div>
+    </div>
+
+    <script>
+    // ═══════════════════════════════════════════════════════════════════════════
+    // CONFIGURATION
+    // ═══════════════════════════════════════════════════════════════════════════
+    
+    var CONFIG = {
+        seismicDurationS: 60,
+        sampleRate: 44100,
+        minMagnitude: 6.0,
+        fetchDays: 30,
+        // Primary station + ordered fallbacks tried in sequence if 204/no-data
+        stations: [
+            { net: "IU", sta: "ANMO", loc: "00", cha: "BHZ" },
+            { net: "IU", sta: "COLA", loc: "00", cha: "BHZ" },
+            { net: "IU", sta: "GUMO", loc: "00", cha: "BHZ" },
+            { net: "IU", sta: "HNR",  loc: "00", cha: "BHZ" },
+            { net: "IU", sta: "MAJO", loc: "00", cha: "BHZ" },
+            { net: "IU", sta: "MIDW", loc: "00", cha: "BHZ" }
+        ],
+        playbackSpeed: 0.0004,
+        cycleDurationS: 25
+    };
+    // Keep CONFIG.station pointing at primary for legacy references
+    CONFIG.station = CONFIG.stations[0];
+    
+    // ═══════════════════════════════════════════════════════════════════════════
+    // MUSICAL SCALES
+    // ═══════════════════════════════════════════════════════════════════════════
+    
+    var SCALES = {
+        pentatonic: [0, 2, 4, 7, 9],
+        minor: [0, 2, 3, 5, 7, 8, 10],
+        dorian: [0, 2, 3, 5, 7, 9, 10],
+        harmonic: [0, 12, 19, 24, 28, 31, 34, 36],
+        fifths: [0, 7, 14, 21, 28]
+    };
+    
+    var semitonesToRatio = function(st) { return Math.pow(2, st / 12); };
+    var clamp = function(val, min, max) { return Math.max(min, Math.min(max, val)); };
+    
+    function quantizeToScale(freq, scale, rootFreq) {
+        var intervals = SCALES[scale] || SCALES.pentatonic;
+        var freqs = [];
+        for (var oct = -3; oct <= 4; oct++) {
+            for (var j = 0; j < intervals.length; j++) {
+                var iv = intervals[j];
+                var f = rootFreq * Math.pow(2, oct) * semitonesToRatio(iv);
+                if (f >= 25 && f <= 8000) freqs.push(f);
+            }
+        }
+        var nearest = freqs[0], minDist = Math.abs(freq - nearest);
+        for (var i = 0; i < freqs.length; i++) {
+            var dist = Math.abs(freq - freqs[i]);
+            if (dist < minDist) { minDist = dist; nearest = freqs[i]; }
+        }
+        return nearest;
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════════
+    // MUSICAL NOTE PARTICLE - Status indicator for MUZAK mode
+    // ═══════════════════════════════════════════════════════════════════════════
+    
+    class MusicNoteParticle {
+        constructor(x, y, symbol) {
+            this.x = x;
+            this.y = y;
+            this.symbol = symbol;
+            this.vx = (Math.random() - 0.5) * 0.8;
+            this.vy = -0.5 - Math.random() * 1.2;
+            this.life = 1.0;
+            this.decay = 0.008 + Math.random() * 0.006;
+            this.size = 12 + Math.random() * 8;
+            this.rotation = (Math.random() - 0.5) * 0.3;
+            this.rotationSpeed = (Math.random() - 0.5) * 0.02;
+            this.wobblePhase = Math.random() * Math.PI * 2;
+            this.wobbleSpeed = 0.05 + Math.random() * 0.03;
+        }
+        
+        update() {
+            this.wobblePhase += this.wobbleSpeed;
+            this.x += this.vx + Math.sin(this.wobblePhase) * 0.3;
+            this.y += this.vy;
+            this.vy *= 0.995;
+            this.rotation += this.rotationSpeed;
+            this.life -= this.decay;
+            return this.life > 0;
+        }
+        
+        draw(ctx) {
+            if (this.life <= 0) return;
+            ctx.save();
+            ctx.translate(this.x, this.y);
+            ctx.rotate(this.rotation);
+            ctx.globalAlpha = this.life * 0.9;
+            ctx.font = this.size + 'px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.shadowColor = '#ffaa00';
+            ctx.shadowBlur = 10 * this.life;
+            ctx.fillStyle = 'rgba(255, ' + (180 + Math.floor(this.life * 50)) + ', ' + (100 + Math.floor(this.life * 50)) + ', ' + this.life + ')';
+            ctx.fillText(this.symbol, 0, 0);
+            ctx.restore();
+        }
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════════
+    // SHADOW ZONE VISUALIZER - Always animating, MUZAK adds note indicators
+    // ═══════════════════════════════════════════════════════════════════════════
+    
+    class ShadowZoneVisualizer {
+        constructor(canvas) {
+            this.canvas = canvas;
+            this.ctx = canvas.getContext('2d');
+            
+            this.coreRatio = 0.545;
+            this.innerCoreRatio = 0.19;
+            this.shadowStart = 103;
+            this.shadowEnd = 142;
+            
+            this.epicenterAngle = -Math.PI / 2;
+            this.stationAngle = this.epicenterAngle + Math.PI * 0.44;
+            this.seismicAmplitude = 0;
+            this.rayCount = 20;
+            
+            // Continuous animation - always runs independently
+            this.animationTime = 0;
+            this.wavefrontSpeed = 0.00111;
+            
+            // MUZAK mode - only controls note indicator display
+            this.isMuzak = false;
+            this.noteParticles = [];
+            this.noteSymbols = ['\u266A', '\u266B', '\uD83C\uDFB5', '\uD83C\uDFB6'];
+            this.lastNoteSpawn = 0;
+            
+            this.rays = [];
+            this.resize();
+        }
+        
+        resize() {
+            var rect = this.canvas.getBoundingClientRect();
+            var dpr = Math.min(window.devicePixelRatio || 1, 2);
+            this.canvas.width = rect.width * dpr;
+            this.canvas.height = rect.height * dpr;
+            this.ctx.setTransform(1, 0, 0, 1, 0, 0); // [COMPAT] reset transform before scaling
+            this.ctx.scale(dpr, dpr);
+            
+            this.w = rect.width;
+            this.h = rect.height;
+            this.cx = this.w / 2;
+            this.cy = this.h / 2;
+            this.R = Math.min(this.w, this.h) * 0.38;
+            
+            this.calculateRays();
+        }
+        
+        calculateRays() {
+            this.rays = [];
+            var coreR = this.R * this.coreRatio;
+            
+            for (var i = 0; i < this.rayCount; i++) {
+                var frac = i / (this.rayCount - 1);
+                var takeoff = this.epicenterAngle + (frac - 0.5) * Math.PI * 0.9;
+                this.rays.push(this.traceRay(takeoff, coreR));
+            }
+        }
+        
+        traceRay(takeoff, coreR) {
+            var startX = this.cx + this.R * Math.cos(this.epicenterAngle);
+            var startY = this.cy + this.R * Math.sin(this.epicenterAngle);
+            var points = [{ x: startX, y: startY }];
+            
+            var dirAngle = takeoff + Math.PI;
+            var dirX = Math.cos(dirAngle);
+            var dirY = Math.sin(dirAngle);
+            
+            var rayStart = { x: startX - this.cx, y: startY - this.cy };
+            var a = dirX * dirX + dirY * dirY;
+            var b = 2 * (rayStart.x * dirX + rayStart.y * dirY);
+            var cCore = rayStart.x * rayStart.x + rayStart.y * rayStart.y - coreR * coreR; // [COMPAT] no ** operator
+            var disc = b * b - 4 * a * cCore;
+            
+            var hitsCore = false;
+            var exitAngle = takeoff;
+            
+            if (disc > 0) {
+                var t1 = (-b - Math.sqrt(disc)) / (2 * a);
+                var t2 = (-b + Math.sqrt(disc)) / (2 * a);
+                
+                if (t1 > 10 && t2 > t1) {
+                    hitsCore = true;
+                    points.push({ x: startX + dirX * t1, y: startY + dirY * t1, type: 'core' });
+                    points.push({ x: startX + dirX * t2, y: startY + dirY * t2, type: 'core' });
+                    
+                    var entryAngle = Math.atan2(points[1].y - this.cy, points[1].x - this.cx);
+                    var exitCoreAngle = Math.atan2(points[2].y - this.cy, points[2].x - this.cx);
+                    exitAngle = exitCoreAngle + (exitCoreAngle - entryAngle) * 0.5;
+                    
+                    points.push({
+                        x: this.cx + this.R * Math.cos(exitAngle),
+                        y: this.cy + this.R * Math.sin(exitAngle)
+                    });
+                }
+            }
+            
+            if (!hitsCore) {
+                var cSurf = rayStart.x * rayStart.x + rayStart.y * rayStart.y - this.R * this.R; // [COMPAT] no ** operator
+                var discSurf = b * b - 4 * a * cSurf;
+                if (discSurf > 0) {
+                    var t = (-b + Math.sqrt(discSurf)) / (2 * a);
+                    if (t > 10) {
+                        var ex = startX + dirX * t;
+                        var ey = startY + dirY * t;
+                        exitAngle = Math.atan2(ey - this.cy, ex - this.cx);
+                        points.push({ x: ex, y: ey });
+                    }
+                }
+            }
+            
+            var angDist = exitAngle - this.epicenterAngle;
+            while (angDist < 0) angDist += Math.PI * 2;
+            while (angDist > Math.PI * 2) angDist -= Math.PI * 2;
+            if (angDist > Math.PI) angDist = Math.PI * 2 - angDist;
+            var deg = angDist * 180 / Math.PI;
+            
+            return {
+                points: points,
+                hitsCore: hitsCore,
+                inShadow: deg >= this.shadowStart && deg <= this.shadowEnd,
+                length: this.rayLength(points)
+            };
+        }
+        
+        rayLength(pts) {
+            var len = 0;
+            for (var i = 1; i < pts.length; i++) {
+                len += Math.hypot(pts[i].x - pts[i-1].x, pts[i].y - pts[i-1].y);
+            }
+            return len;
+        }
+        
+        pointOnRay(ray, frac) {
+            var target = ray.length * frac;
+            var traveled = 0;
+            for (var i = 1; i < ray.points.length; i++) {
+                var dx = ray.points[i].x - ray.points[i-1].x;
+                var dy = ray.points[i].y - ray.points[i-1].y;
+                var seg = Math.hypot(dx, dy);
+                if (traveled + seg >= target) {
+                    var t = (target - traveled) / seg;
+                    return { x: ray.points[i-1].x + dx * t, y: ray.points[i-1].y + dy * t };
+                }
+                traveled += seg;
+            }
+            return ray.points[ray.points.length - 1];
+        }
+        
+        setEpicenter(lon, lat) {
+            this.epicenterAngle = -Math.PI / 2 + (lon / 180) * Math.PI * 0.25;
+            this.calculateRays();
+        }
+        
+        setMuzakMode(enabled) {
+            this.isMuzak = enabled;
+            if (enabled) {
+                this.lastNoteSpawn = this.animationTime;
+            }
+        }
+        
+        update(amplitude) {
+            this.seismicAmplitude = clamp(amplitude, 0, 1);
+            
+            // Always advance animation - wavefronts NEVER stop
+            this.animationTime += this.wavefrontSpeed;
+            
+            // MUZAK mode: spawn and update note status indicators
+            if (this.isMuzak) {
+                if (this.animationTime - this.lastNoteSpawn > 0.2 + Math.random() * 0.25) {
+                    this.spawnNote();
+                    this.lastNoteSpawn = this.animationTime;
+                }
+                this.noteParticles = this.noteParticles.filter(function(p) { return p.update(); });
+            }
+        }
+        
+        spawnNote() {
+            var symbol = this.noteSymbols[Math.floor(Math.random() * this.noteSymbols.length)];
+            
+            // Spawn from epicenter (70% chance)
+            if (Math.random() < 0.7) {
+                var ex = this.cx + this.R * Math.cos(this.epicenterAngle);
+                var ey = this.cy + this.R * Math.sin(this.epicenterAngle);
+                this.noteParticles.push(new MusicNoteParticle(
+                    ex + (Math.random() - 0.5) * 20,
+                    ey + (Math.random() - 0.5) * 20,
+                    symbol
+                ));
+            }
+            
+            // Spawn from station (40% chance)
+            if (Math.random() < 0.4) {
+                var sx = this.cx + this.R * Math.cos(this.stationAngle);
+                var sy = this.cy + this.R * Math.sin(this.stationAngle);
+                this.noteParticles.push(new MusicNoteParticle(
+                    sx + (Math.random() - 0.5) * 15,
+                    sy + (Math.random() - 0.5) * 15,
+                    symbol
+                ));
+            }
+        }
+        
+        draw() {
+            var ctx = this.ctx;
+            
+            ctx.fillStyle = '#06060a';
+            ctx.fillRect(0, 0, this.w, this.h);
+            
+            this.drawEarth();
+            this.drawShadowZones();
+            this.drawRays();
+            this.drawWavefronts();
+            this.drawEpicenter();
+            this.drawStation();
+            this.drawLabels();
+            
+            // Draw note indicators when in MUZAK mode
+            if (this.isMuzak) {
+                this.drawNoteParticles();
+            }
+        }
+        
+        drawEarth() {
+            var ctx = this.ctx;
+            
+            var mantleGrad = ctx.createRadialGradient(this.cx, this.cy, 0, this.cx, this.cy, this.R);
+            mantleGrad.addColorStop(0, '#0a1218');
+            mantleGrad.addColorStop(0.5, '#1a2a3a');
+            mantleGrad.addColorStop(1, '#2d4a5a');
+            ctx.fillStyle = mantleGrad;
+            ctx.beginPath();
+            ctx.arc(this.cx, this.cy, this.R, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.strokeStyle = '#3d5a6a';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            
+            var coreR = this.R * this.coreRatio;
+            var coreGrad = ctx.createRadialGradient(this.cx, this.cy, 0, this.cx, this.cy, coreR);
+            coreGrad.addColorStop(0, '#8a5a3a');
+            coreGrad.addColorStop(1, '#4a2a1a');
+            ctx.fillStyle = coreGrad;
+            ctx.beginPath();
+            ctx.arc(this.cx, this.cy, coreR, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.strokeStyle = 'rgba(255, 150, 100, ' + (0.3 + this.seismicAmplitude * 0.3) + ')';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            var innerR = this.R * this.innerCoreRatio;
+            ctx.fillStyle = '#6a4a2a';
+            ctx.beginPath();
+            ctx.arc(this.cx, this.cy, innerR, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        
+        drawShadowZones() {
+            var ctx = this.ctx;
+            var startRad = this.shadowStart * Math.PI / 180;
+            var endRad = this.shadowEnd * Math.PI / 180;
+            var sides = [1, -1];
+            
+            for (var si = 0; si < sides.length; si++) {
+                var side = sides[si];
+                var s = this.epicenterAngle + side * startRad;
+                var e = this.epicenterAngle + side * endRad;
+                
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+                ctx.beginPath();
+                ctx.moveTo(this.cx, this.cy);
+                ctx.arc(this.cx, this.cy, this.R * 1.3, side === 1 ? s : e, side === 1 ? e : s);
+                ctx.closePath();
+                ctx.fill();
+                
+                ctx.strokeStyle = 'rgba(255, 68, 68, ' + (0.5 + this.seismicAmplitude * 0.3) + ')';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.arc(this.cx, this.cy, this.R, side === 1 ? s : e, side === 1 ? e : s);
+                ctx.stroke();
+            }
+        }
+        
+        drawRays() {
+            var ctx = this.ctx;
+            
+            for (var ri = 0; ri < this.rays.length; ri++) {
+                var ray = this.rays[ri];
+                if (ray.points.length < 2) continue;
+                
+                ctx.beginPath();
+                ctx.moveTo(ray.points[0].x, ray.points[0].y);
+                for (var i = 1; i < ray.points.length; i++) {
+                    ctx.lineTo(ray.points[i].x, ray.points[i].y);
+                }
+                
+                if (ray.inShadow) {
+                    ctx.strokeStyle = 'rgba(255, 100, 100, 0.12)';
+                    ctx.lineWidth = 0.5;
+                } else if (ray.hitsCore) {
+                    ctx.strokeStyle = 'rgba(255, 150, 100, ' + (0.2 + this.seismicAmplitude * 0.35) + ')';
+                    ctx.lineWidth = 1 + this.seismicAmplitude * 0.5;
+                } else {
+                    ctx.strokeStyle = 'rgba(74, 158, 255, ' + (0.3 + this.seismicAmplitude * 0.4) + ')';
+                    ctx.lineWidth = 1 + this.seismicAmplitude * 0.5;
+                }
+                ctx.stroke();
+            }
+        }
+        
+        drawWavefronts() {
+            var ctx = this.ctx;
+            var wavefrontPhase = this.animationTime % 1;
+            
+            for (var w = 0; w < 3; w++) {
+                var phase = (wavefrontPhase + w / 3) % 1;
+                var alpha = 1 - w * 0.3;
+                
+                for (var ri = 0; ri < this.rays.length; ri++) {
+                    var ray = this.rays[ri];
+                    if (ray.points.length < 2 || ray.inShadow) continue;
+                    
+                    var pos = this.pointOnRay(ray, phase);
+                    var size = 2.5 + this.seismicAmplitude * 4 - w * 0.8;
+                    
+                    if (size > 0) {
+                        ctx.fillStyle = ray.hitsCore
+                            ? 'rgba(255, 180, 120, ' + (alpha * (0.5 + this.seismicAmplitude * 0.5)) + ')'
+                            : 'rgba(100, 180, 255, ' + (alpha * (0.6 + this.seismicAmplitude * 0.4)) + ')';
+                        ctx.beginPath();
+                        ctx.arc(pos.x, pos.y, size, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+            }
+        }
+        
+        drawEpicenter() {
+            var ctx = this.ctx;
+            var ex = this.cx + this.R * Math.cos(this.epicenterAngle);
+            var ey = this.cy + this.R * Math.sin(this.epicenterAngle);
+            
+            var wavefrontPhase = this.animationTime % 1;
+            var pulse = 12 + this.seismicAmplitude * 25 + Math.sin(wavefrontPhase * Math.PI * 4) * 5;
+            var grad = ctx.createRadialGradient(ex, ey, 0, ex, ey, pulse * 2);
+            grad.addColorStop(0, 'rgba(255, 68, 68, ' + (0.8 + this.seismicAmplitude * 0.2) + ')');
+            grad.addColorStop(0.4, 'rgba(255, 50, 50, 0.4)');
+            grad.addColorStop(1, 'transparent');
+            
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.arc(ex, ey, pulse * 2, 0, Math.PI * 2);
+            ctx.fill();
+            
+            var emojiSize = Math.round(10 + this.seismicAmplitude * 14);
+            ctx.font = emojiSize + 'px serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('🦀', ex, ey);
+        }
+        
+        drawStation() {
+            var ctx = this.ctx;
+            var sx = this.cx + this.R * Math.cos(this.stationAngle);
+            var sy = this.cy + this.R * Math.sin(this.stationAngle);
+            
+            if (this.seismicAmplitude > 0.05) {
+                var ringSize = 10 + this.seismicAmplitude * 30;
+                ctx.strokeStyle = 'rgba(74, 255, 158, ' + (this.seismicAmplitude * 0.7) + ')';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(sx, sy, ringSize, 0, Math.PI * 2);
+                ctx.stroke();
+                
+                ctx.strokeStyle = 'rgba(74, 255, 158, ' + (this.seismicAmplitude * 0.4) + ')';
+                ctx.beginPath();
+                ctx.arc(sx, sy, ringSize * 0.6, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+            
+            ctx.fillStyle = '#4aff9e';
+            ctx.beginPath();
+            var outAngle = this.stationAngle;
+            ctx.moveTo(sx + Math.cos(outAngle) * 8, sy + Math.sin(outAngle) * 8);
+            ctx.lineTo(sx + Math.cos(outAngle + 2.3) * 5, sy + Math.sin(outAngle + 2.3) * 5);
+            ctx.lineTo(sx + Math.cos(outAngle - 2.3) * 5, sy + Math.sin(outAngle - 2.3) * 5);
+            ctx.closePath();
+            ctx.fill();
+            
+            ctx.strokeStyle = '#4aff9e';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(sx, sy);
+            ctx.lineTo(sx + Math.cos(outAngle - 0.3) * 14, sy + Math.sin(outAngle - 0.3) * 14);
+            ctx.stroke();
+        }
+        
+        drawLabels() {
+            var ctx = this.ctx;
+            var fontSize = Math.max(8, Math.min(9, this.w * 0.015));
+            
+            var sx = this.cx + this.R * Math.cos(this.stationAngle);
+            var sy = this.cy + this.R * Math.sin(this.stationAngle);
+            ctx.fillStyle = '#4aff9e';
+            ctx.font = fontSize + 'px -apple-system, BlinkMacSystemFont, monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText('IU.ANMO', sx + 18, sy + 22);
+            
+            ctx.fillStyle = 'rgba(255, 100, 100, 0.75)';
+            ctx.font = (fontSize - 1) + 'px -apple-system, BlinkMacSystemFont, monospace';
+            var midAngle = (this.shadowStart + this.shadowEnd) / 2 * Math.PI / 180;
+            
+            var sides = [1, -1];
+            for (var si = 0; si < sides.length; si++) {
+                var side = sides[si];
+                var labelAngle = this.epicenterAngle + side * midAngle;
+                var lx = this.cx + this.R * 1.12 * Math.cos(labelAngle);
+                var ly = this.cy + this.R * 1.12 * Math.sin(labelAngle);
+                
+                ctx.save();
+                ctx.translate(lx, ly);
+                ctx.rotate(labelAngle + (side === 1 ? Math.PI / 2 : -Math.PI / 2));
+                ctx.fillText('SHADOW', 0, 0);
+                ctx.fillText('ZONE', 0, 10);
+                ctx.restore();
+            }
+            
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+            ctx.font = (fontSize - 1) + 'px -apple-system, BlinkMacSystemFont, monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText('MANTLE', this.cx, this.cy - this.R * 0.72);
+            
+            ctx.fillStyle = 'rgba(255, 200, 150, 0.45)';
+            ctx.fillText('OUTER CORE', this.cx, this.cy - this.R * 0.33);
+            
+            ctx.fillStyle = 'rgba(255, 220, 180, 0.45)';
+            ctx.fillText('INNER', this.cx, this.cy - 3);
+            ctx.fillText('CORE', this.cx, this.cy + 9);
+        }
+        
+        drawNoteParticles() {
+            for (var i = 0; i < this.noteParticles.length; i++) {
+                this.noteParticles[i].draw(this.ctx);
+            }
+        }
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════════
+    // SYNTH GRAIN
+    // ═══════════════════════════════════════════════════════════════════════════
+    
+    class SynthGrain {
+        constructor(ctx, params) {
+            this.ctx = ctx;
+            this.params = params;
+        }
+        
+        play(dest, startTime) {
+            var p = this.params;
+            var frequency = p.frequency, duration = p.duration, waveform = p.waveform;
+            var pan = p.pan, amplitude = p.amplitude, attack = p.attack, release = p.release;
+            var detune = p.detune, filterFreq = p.filterFreq, filterQ = p.filterQ;
+            
+            var osc = this.ctx.createOscillator();
+            osc.type = waveform || 'sine';
+            osc.frequency.value = frequency;
+            osc.detune.value = detune || 0;
+            
+            var filter = this.ctx.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.value = filterFreq || 4000;
+            filter.Q.value = filterQ || 1;
+            
+            var env = this.ctx.createGain();
+            var att = duration * attack;
+            var rel = duration * release;
+            var sus = Math.max(0, duration - att - rel);
+            
+            env.gain.setValueAtTime(0, startTime);
+            env.gain.linearRampToValueAtTime(amplitude, startTime + att);
+            if (sus > 0) env.gain.setValueAtTime(amplitude, startTime + att + sus);
+            env.gain.linearRampToValueAtTime(0, startTime + duration);
+            
+            // [COMPAT] StereoPanner with fallback for older browsers
+            var panNode;
+            if (typeof StereoPannerNode !== 'undefined') {
+                panNode = this.ctx.createStereoPanner();
+                panNode.pan.value = clamp(pan, -1, 1);
+            } else {
+                // Fallback: use regular panner or gain node
+                panNode = this.ctx.createGain();
+                panNode.gain.value = 1;
+            }
+            
+            osc.connect(filter);
+            filter.connect(env);
+            env.connect(panNode);
+            panNode.connect(dest);
+            
+            osc.start(startTime);
+            osc.stop(startTime + duration + 0.02);
+            
+            return osc;
+        }
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════════
+    // GRANULAR CLOUD
+    // ═══════════════════════════════════════════════════════════════════════════
+    
+    class GranularCloud {
+        constructor(ctx, dest, type) {
+            this.ctx = ctx;
+            this.destination = dest;
+            this.type = type || 'texture';
+            this.isActive = false;
+            this.schedulerId = null;
+            
+            this.density = 30;
+            this.grainDuration = 0.05;
+            this.durationSpread = 0.4;
+            this.baseFrequency = 220;
+            this.frequencySpread = 0.5;
+            this.panSpread = 0.8;
+            this.amplitude = 0.12;
+            this.attackRatio = 0.3;
+            this.releaseRatio = 0.5;
+            this.waveform = 'sine';
+            this.filterFreq = 4000;
+            this.filterQ = 1;
+            
+            this.quantizeEnabled = true;
+            this.scale = 'pentatonic';
+            this.rootFreq = 110;
+            
+            this.outputGain = this.ctx.createGain();
+            this.outputGain.gain.value = 0.7;
+            this.outputGain.connect(this.destination);
+            
+            this.grainCount = 0;
+        }
+        
+        setParams(p) { Object.assign(this, p); }
+        
+        start() {
+            this.isActive = true;
+            this.scheduleGrain();
+        }
+        
+        stop() {
+            this.isActive = false;
+            if (this.schedulerId) {
+                clearTimeout(this.schedulerId);
+                this.schedulerId = null;
+            }
+        }
+        
+        scheduleGrain() {
+            if (!this.isActive) return;
+            
+            var now = this.ctx.currentTime;
+            var freq = this.baseFrequency * Math.pow(2, (Math.random() - 0.5) * this.frequencySpread * 2);
+            
+            if (this.quantizeEnabled) {
+                freq = quantizeToScale(freq, this.scale, this.rootFreq);
+            }
+            
+            var dur = this.grainDuration * (1 + (Math.random() - 0.5) * this.durationSpread);
+            
+            var params = {
+                frequency: freq,
+                duration: Math.max(0.01, dur),
+                waveform: this.waveform,
+                pan: (Math.random() - 0.5) * 2 * this.panSpread,
+                amplitude: this.amplitude * (0.7 + Math.random() * 0.3),
+                attack: this.attackRatio,
+                release: this.releaseRatio,
+                detune: (Math.random() - 0.5) * 25,
+                filterFreq: this.filterFreq,
+                filterQ: this.filterQ
+            };
+            
+            new SynthGrain(this.ctx, params).play(this.outputGain, now);
+            this.grainCount++;
+            
+            var interval = 1000 / Math.max(1, this.density);
+            var jitter = interval * 0.25 * (Math.random() - 0.5);
+            var self = this;
+            this.schedulerId = setTimeout(function() { self.scheduleGrain(); }, Math.max(8, interval + jitter));
+        }
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════════
+    // RHYTHM CLOUD
+    // ═══════════════════════════════════════════════════════════════════════════
+    
+    class RhythmCloud extends GranularCloud {
+        constructor(ctx, dest, zeroCrossings) {
+            super(ctx, dest, 'rhythm');
+            this.zeroCrossings = zeroCrossings || [];
+            this.crossingIndex = 0;
+            this.triggerProbability = 0.6;
+            this.waveform = 'triangle';
+            this.attackRatio = 0.05;
+            this.releaseRatio = 0.7;
+        }
+        
+        scheduleGrain() {
+            if (!this.isActive) return;
+            
+            this.crossingIndex = (this.crossingIndex + 1) % Math.max(1, this.zeroCrossings.length);
+            
+            if (Math.random() < this.triggerProbability) {
+                var now = this.ctx.currentTime;
+                var freq = this.baseFrequency;
+                if (this.quantizeEnabled) freq = quantizeToScale(freq, this.scale, this.rootFreq);
+                
+                var params = {
+                    frequency: freq,
+                    duration: this.grainDuration,
+                    waveform: this.waveform,
+                    pan: (Math.random() - 0.5) * 2 * this.panSpread,
+                    amplitude: this.amplitude,
+                    attack: this.attackRatio,
+                    release: this.releaseRatio,
+                    detune: 0,
+                    filterFreq: this.filterFreq,
+                    filterQ: this.filterQ
+                };
+                
+                new SynthGrain(this.ctx, params).play(this.outputGain, now);
+                this.grainCount++;
+            }
+            
+            var self = this;
+            this.schedulerId = setTimeout(function() { self.scheduleGrain(); }, 1000 / Math.max(1, this.density));
+        }
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════════
+    // GRANULAR ENGINE
+    // ═══════════════════════════════════════════════════════════════════════════
+    
+    class GranularEngine {
+        constructor(ctx, dest) {
+            this.ctx = ctx;
+            this.destination = dest;
+            this.seismicData = [];
+            this.zeroCrossings = [];
+            this.playhead = 0;
+            this.isActive = false;
+            this.isFrozen = false;
+            this.stretchFactor = 1.0;
+            
+            this.filter = this.ctx.createBiquadFilter();
+            this.filter.type = 'lowpass';
+            this.filter.frequency.value = 5000;
+            this.filter.Q.value = 1.5;
+            
+            this.masterGain = this.ctx.createGain();
+            this.masterGain.gain.value = 0;
+            
+            this.filter.connect(this.masterGain);
+            this.masterGain.connect(this.destination);
+            
+            this.textureCloud = null;
+            this.toneCloud = null;
+            this.rhythmCloud = null;
+            
+            this.animFrameId = null;
+        }
+        
+        loadSeismicData(arr) {
+            this.seismicData = Array.from(arr);
+            this.zeroCrossings = this.detectZeroCrossings(this.seismicData);
+            console.log('[Engine] Loaded ' + this.seismicData.length + ' samples, ' + this.zeroCrossings.length + ' zero-crossings');
+        }
+        
+        detectZeroCrossings(data) {
+            var crossings = [];
+            for (var i = 1; i < data.length; i++) {
+                if (data[i-1] * data[i] < 0) crossings.push(i / data.length);
+            }
+            return crossings;
+        }
+        
+        initializeClouds(rootFreq, scale) {
+            this.textureCloud = new GranularCloud(this.ctx, this.filter, 'texture');
+            this.textureCloud.setParams({
+                density: 45, grainDuration: 0.035, durationSpread: 0.5,
+                baseFrequency: rootFreq * 4, frequencySpread: 1.2, panSpread: 1.0,
+                amplitude: 0.08, attackRatio: 0.1, releaseRatio: 0.6,
+                waveform: 'sine', filterFreq: 6000, filterQ: 1, scale: scale, rootFreq: rootFreq
+            });
+            
+            this.toneCloud = new GranularCloud(this.ctx, this.filter, 'tone');
+            this.toneCloud.setParams({
+                density: 6, grainDuration: 0.3, durationSpread: 0.3,
+                baseFrequency: rootFreq, frequencySpread: 0.4, panSpread: 0.35,
+                amplitude: 0.14, attackRatio: 0.4, releaseRatio: 0.45,
+                waveform: 'triangle', filterFreq: 3000, filterQ: 2, scale: scale, rootFreq: rootFreq
+            });
+            
+            this.rhythmCloud = new RhythmCloud(this.ctx, this.filter, this.zeroCrossings);
+            this.rhythmCloud.setParams({
+                density: 14, grainDuration: 0.055, baseFrequency: rootFreq * 2,
+                frequencySpread: 0.35, panSpread: 0.7, amplitude: 0.1,
+                triggerProbability: 0.55, waveform: 'sawtooth',
+                filterFreq: 4000, filterQ: 3, scale: scale, rootFreq: rootFreq
+            });
+        }
+        
+        start(rootFreq, scale, layerStates) {
+            this.isActive = true;
+            this.playhead = 0;
+            this.initializeClouds(rootFreq, scale);
+            
+            if (layerStates.texture) this.textureCloud.start();
+            if (layerStates.tone) this.toneCloud.start();
+            if (layerStates.rhythm) this.rhythmCloud.start();
+            
+            this.masterGain.gain.setTargetAtTime(0.95, this.ctx.currentTime, 1.5);
+            this.modulateFromSeismic();
+        }
+        
+        modulateFromSeismic() {
+            if (!this.isActive) return;
+            
+            var idx = Math.floor(this.playhead * this.seismicData.length);
+            var sample = this.seismicData[idx] || 0;
+            var deriv = this.calculateDerivative(idx);
+            var rms = this.calculateRMS(idx);
+            var now = this.ctx.currentTime;
+            
+            var amp = Math.abs(sample);
+            
+            var targetFilter = 2000 + amp * 6000;
+            this.filter.frequency.setTargetAtTime(clamp(targetFilter, 1000, 10000), now, 0.025);
+            
+            if (this.textureCloud && this.textureCloud.isActive) {
+                this.textureCloud.density = 35 + amp * 60;
+                this.textureCloud.amplitude = 0.06 + amp * 0.08;
+                this.textureCloud.frequencySpread = 0.4 + deriv * 15;
+                this.textureCloud.panSpread = 0.5 + deriv * 8;
+                this.textureCloud.baseFrequency = this.textureCloud.rootFreq * 4 * (1 + sample * 0.25);
+            }
+            
+            if (this.toneCloud && this.toneCloud.isActive) {
+                this.toneCloud.density = 5 + rms * 10;
+                this.toneCloud.frequencySpread = 0.2 + deriv * 8;
+                this.toneCloud.amplitude = 0.1 + rms * 0.08;
+            }
+            
+            if (this.rhythmCloud && this.rhythmCloud.isActive) {
+                this.rhythmCloud.triggerProbability = 0.35 + rms * 0.5;
+                this.rhythmCloud.baseFrequency = this.rhythmCloud.rootFreq * 2 * (1 + rms * 0.4);
+                this.rhythmCloud.amplitude = 0.08 + amp * 0.08;
+            }
+            
+            if (!this.isFrozen) {
+                this.playhead += CONFIG.playbackSpeed / this.stretchFactor;
+                if (this.playhead >= 1) this.playhead = 0;
+            }
+            
+            var self = this;
+            this.animFrameId = requestAnimationFrame(function() { self.modulateFromSeismic(); });
+        }
+        
+        calculateDerivative(idx, win) {
+            win = win || 5;
+            if (idx < win || idx >= this.seismicData.length - win) return 0;
+            var sum = 0;
+            for (var i = 1; i <= win; i++) {
+                sum += Math.abs(this.seismicData[idx + i] - this.seismicData[idx - i]);
+            }
+            return sum / (2 * win);
+        }
+        
+        calculateRMS(idx, win) {
+            win = win || 50;
+            var start = Math.max(0, idx - win);
+            var end = Math.min(this.seismicData.length, idx + win);
+            var sum = 0;
+            for (var i = start; i < end; i++) sum += this.seismicData[i] * this.seismicData[i]; // [COMPAT] no ** operator
+            return Math.sqrt(sum / (end - start));
+        }
+        
+        freeze() {
+            this.isFrozen = true;
+            if (this.textureCloud) {
+                this.textureCloud.density = 90;
+                this.textureCloud.grainDuration = 0.15;
+                this.textureCloud.frequencySpread = 0.15;
+            }
+            if (this.toneCloud) {
+                this.toneCloud.density = 14;
+                this.toneCloud.grainDuration = 0.5;
+            }
+        }
+        
+        unfreeze() {
+            this.isFrozen = false;
+            if (this.textureCloud) {
+                this.textureCloud.density = 45;
+                this.textureCloud.grainDuration = 0.035;
+                this.textureCloud.frequencySpread = 1.2;
+            }
+            if (this.toneCloud) {
+                this.toneCloud.density = 6;
+                this.toneCloud.grainDuration = 0.3;
+            }
+        }
+        
+        setStretch(f) { this.stretchFactor = f; }
+        
+        setScale(s) {
+            var clouds = [this.textureCloud, this.toneCloud, this.rhythmCloud];
+            for (var i = 0; i < clouds.length; i++) {
+                if (clouds[i]) clouds[i].scale = s;
+            }
+        }
+        
+        setRootFreq(f) {
+            if (this.textureCloud) { this.textureCloud.rootFreq = f; this.textureCloud.baseFrequency = f * 4; }
+            if (this.toneCloud) { this.toneCloud.rootFreq = f; this.toneCloud.baseFrequency = f; }
+            if (this.rhythmCloud) { this.rhythmCloud.rootFreq = f; this.rhythmCloud.baseFrequency = f * 2; }
+        }
+        
+        setLayerActive(layer, active) {
+            var cloud = this[layer + 'Cloud'];
+            if (cloud) {
+                if (active && !cloud.isActive) cloud.start();
+                else if (!active && cloud.isActive) cloud.stop();
+            }
+        }
+        
+        getStats() {
+            return {
+                texture: this.textureCloud ? this.textureCloud.grainCount : 0,
+                tone: this.toneCloud ? this.toneCloud.grainCount : 0,
+                rhythm: this.rhythmCloud ? this.rhythmCloud.grainCount : 0,
+                filterFreq: Math.round(this.filter.frequency.value)
+            };
+        }
+        
+        cleanup() {
+            this.isActive = false;
+            if (this.animFrameId) cancelAnimationFrame(this.animFrameId);
+            var clouds = [this.textureCloud, this.toneCloud, this.rhythmCloud];
+            for (var i = 0; i < clouds.length; i++) { if (clouds[i]) clouds[i].stop(); }
+            try { this.filter.disconnect(); this.masterGain.disconnect(); } catch(e) {}
+        }
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════════
+    // GLOBAL STATE
+    // ═══════════════════════════════════════════════════════════════════════════
+    
+    var audioCtx = null;
+    var masterGain, compressor, reverb, reverbWet, delay, delayFeedback;
+    var seismicData = [];
+    var isPlaying = false;
+    var isFrozen = false;
+    var quakeInfo = null;
+    var granularEngine = null;
+    var shadowViz = null;
+    var layerStates = { texture: true, tone: true, rhythm: true };
+    
+    var startBtn = document.getElementById('startBtn');
+    var stopBtn = document.getElementById('stopBtn');
+    var freezeBtn = document.getElementById('freezeBtn');
+    var statusEl = document.getElementById('status');
+    var scaleSelect = document.getElementById('scaleSelect');
+    var rootSelect = document.getElementById('rootSelect');
+    var stretchSlider = document.getElementById('stretchSlider');
+    var reverbSlider = document.getElementById('reverbSlider');
+    var textureEl = document.getElementById('textureValue');
+    var toneEl = document.getElementById('toneValue');
+    var rhythmEl = document.getElementById('rhythmValue');
+    var filterEl = document.getElementById('filterValue');
+    
+    var shadowCanvas;
+    
+    // ═══════════════════════════════════════════════════════════════════════════
+    // SEISMIC DATA
+    // ═══════════════════════════════════════════════════════════════════════════
+    
+    // ─── GeoCSV waveform parser (replaces binary miniSEED/Steim) ─────────────
+    function parseGeoCSV(text) {
+        try {
+            var lines = text.split('\n');
+            var samples = [];
+            for (var i = 0; i < lines.length; i++) {
+                if (lines[i].charAt(0) === '#' || lines[i].trim() === '') continue;
+                var v = parseFloat(lines[i]);
+                if (!isNaN(v)) samples.push(v);
+            }
+            if (samples.length === 0) throw new Error('No samples in GeoCSV response');
+            console.log('[SOS] GeoCSV decoded: ' + samples.length + ' samples');
+            var maxVal = 0;
+            for (var i = 0; i < samples.length; i++) {
+                var av = Math.abs(samples[i]);
+                if (av > maxVal) maxVal = av;
+            }
+            if (maxVal === 0) throw new Error('Zero-amplitude waveform');
+            var normalized = new Float32Array(samples.length);
+            for (var i = 0; i < samples.length; i++) normalized[i] = samples[i] / maxVal;
+            return normalized;
+        } catch (e) {
+            console.warn('[SOS] GeoCSV parse error — using synthetic fallback:', e.message);
+            var fb = new Float32Array(8192);
+            for (var i = 0; i < fb.length; i++) {
+                var p = Math.sin(i * 0.15) * Math.exp(-i / 1500);
+                var s = i > 2000 ? Math.sin((i - 2000) * 0.08) * Math.exp(-(i - 2000) / 3000) * 1.5 : 0;
+                var surf = i > 4000 ? (Math.sin((i - 4000) * 0.03) + Math.sin((i - 4000) * 0.05) * 0.5) * Math.exp(-(i - 4000) / 5000) * 0.8 : 0;
+                fb[i] = p + s + surf + (Math.random() - 0.5) * 0.05;
+            }
+            var maxV = 0;
+            for (var i = 0; i < fb.length; i++) { if (Math.abs(fb[i]) > maxV) maxV = Math.abs(fb[i]); }
+            if (maxV > 0) for (var i = 0; i < fb.length; i++) fb[i] /= maxV;
+            return fb;
+        }
+    }
+    
+    function fetchLatestEvent() {
+        var end = new Date().toISOString();
+        var start = new Date(Date.now() - CONFIG.fetchDays * 86400000).toISOString();
+        var url = 'https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime=' + start + '&endtime=' + end + '&minmagnitude=' + CONFIG.minMagnitude + '&orderby=time';
+        return fetch(url).then(function(res) {
+            if (!res.ok) throw new Error('USGS failed: ' + res.status);
+            return res.json();
+        }).then(function(data) {
+            if (!data.features || !data.features.length) throw new Error("No events found");
+            return data.features[0];
+        }).catch(function(e) {
+            console.error(e);
+            setStatus('Error: ' + e.message, true);
+            return null;
+        });
+    }
+    
+    // ── Timeout wrapper for cloud-era EarthScope latency ──
+    function fetchWithTimeout(url, timeoutMs) {
+        timeoutMs = timeoutMs || 15000;
+        return Promise.race([
+            fetch(url),
+            new Promise(function(_, reject) {
+                setTimeout(function() { reject(new Error('Timeout after ' + (timeoutMs/1000) + 's')); }, timeoutMs);
+            })
+        ]);
+    }
+    
+    function fetchWaveform(eventTime, stationIndex) {
+        stationIndex = stationIndex || 0;
+        if (stationIndex >= CONFIG.stations.length) {
+            return Promise.reject(new Error('No waveform data from any station for this event'));
+        }
+        var st = CONFIG.stations[stationIndex];
+        var startTime = new Date(new Date(eventTime).getTime() - 5000).toISOString();
+        var endTime   = new Date(new Date(startTime).getTime() + CONFIG.seismicDurationS * 1000).toISOString();
+        var url = 'https://service.earthscope.org/fdsnws/dataselect/1/query' +
+            '?net=' + st.net + '&sta=' + st.sta + '&loc=' + st.loc + '&cha=' + st.cha +
+            '&starttime=' + startTime + '&endtime=' + endTime +
+            '&format=geocsv.slist.inline&nodata=404';
+        console.log('[SOS] Trying station ' + st.net + '.' + st.sta + ' (' + (stationIndex + 1) + '/' + CONFIG.stations.length + ')');
+        setStatus('Fetching waveform from ' + st.net + '.' + st.sta + '...');
+        return fetchWithTimeout(url, 15000).then(function(res) {
+            if (res.status === 204 || res.status === 404) {
+                console.warn('[SOS] ' + st.net + '.' + st.sta + ' returned ' + res.status + ' — trying next station');
+                return fetchWaveform(eventTime, stationIndex + 1);
+            }
+            if (!res.ok) {
+                return res.text().then(function(txt) {
+                    console.warn('[SOS] ' + st.net + '.' + st.sta + ' error ' + res.status + ': ' + txt.slice(0, 120));
+                    return fetchWaveform(eventTime, stationIndex + 1);
+                });
+            }
+            return res.text().then(function(txt) {
+                if (txt.length < 20) {
+                    console.warn('[SOS] ' + st.net + '.' + st.sta + ' returned ' + txt.length + ' chars — too small, trying next');
+                    return fetchWaveform(eventTime, stationIndex + 1);
+                }
+                CONFIG.station = st;
+                console.log('[SOS] Got ' + txt.length + ' chars from ' + st.net + '.' + st.sta);
+                return txt;
+            });
+        }).catch(function(e) {
+            console.warn('[SOS] Network error on ' + st.net + '.' + st.sta + ':', e.message);
+            return fetchWaveform(eventTime, stationIndex + 1);
+        });
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════════
+    // AUDIO SETUP
+    // ═══════════════════════════════════════════════════════════════════════════
+    
+    function initAudio() {
+        // [COMPAT] webkit prefix fallback for older iOS Safari
+        var AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AudioContextClass({ sampleRate: CONFIG.sampleRate });
+        
+        var resumePromise;
+        if (audioCtx.state === 'suspended') {
+            resumePromise = audioCtx.resume();
+        } else {
+            resumePromise = Promise.resolve();
+        }
+        
+        return resumePromise.then(function() {
+            compressor = audioCtx.createDynamicsCompressor();
+            compressor.threshold.value = -12;
+            compressor.ratio.value = 3;
+            compressor.attack.value = 0.005;
+            compressor.release.value = 0.2;
+            
+            masterGain = audioCtx.createGain();
+            masterGain.gain.value = 0;
+            
+            compressor.connect(masterGain);
+            masterGain.connect(audioCtx.destination);
+            
+            return createReverb();
+        }).then(function() {
+            createDelay();
+        });
+    }
+    
+    function createReverb() {
+        var len = Math.floor(3.5 * audioCtx.sampleRate);
+        var buf = audioCtx.createBuffer(2, len, audioCtx.sampleRate);
+        for (var ch = 0; ch < 2; ch++) {
+            var data = buf.getChannelData(ch);
+            for (var i = 0; i < len; i++) {
+                var decay = Math.pow(1 - i / len, 2.3);
+                var early = i < 2000 ? Math.sin(i * 0.1) * 0.25 : 0;
+                data[i] = ((Math.random() * 2 - 1) * decay + early * decay) * 0.7;
+            }
+        }
+        reverb = audioCtx.createConvolver();
+        reverb.buffer = buf;
+        reverbWet = audioCtx.createGain();
+        reverbWet.gain.value = 0.45;
+        reverb.connect(reverbWet);
+        reverbWet.connect(masterGain);
+        return Promise.resolve();
+    }
+    
+    function createDelay() {
+        delay = audioCtx.createDelay(2);
+        delay.delayTime.value = 0.375;
+        delayFeedback = audioCtx.createGain();
+        delayFeedback.gain.value = 0.38;
+        var delayWet = audioCtx.createGain();
+        delayWet.gain.value = 0.28;
+        var delayFilter = audioCtx.createBiquadFilter();
+        delayFilter.type = 'lowpass';
+        delayFilter.frequency.value = 2200;
+        delay.connect(delayFilter);
+        delayFilter.connect(delayFeedback);
+        delayFeedback.connect(delay);
+        delayFilter.connect(delayWet);
+        delayWet.connect(masterGain);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // VISUALIZATION
+    // ═══════════════════════════════════════════════════════════════════════════
+    
+    function initCanvases() {
+        shadowCanvas = document.getElementById('shadowCanvas');
+        shadowViz = new ShadowZoneVisualizer(shadowCanvas);
+        window.addEventListener('resize', function() { if (shadowViz) { shadowViz.resize(); shadowViz.draw(); } });
+        window.addEventListener('orientationchange', function() {
+            setTimeout(function() { if (shadowViz) { shadowViz.resize(); shadowViz.draw(); } }, 150);
+        });
+    }
+    
+    function updateVisualization() {
+        if (!isPlaying) return;
+        
+        var playhead = granularEngine ? granularEngine.playhead : 0;
+        var idx = Math.floor(playhead * seismicData.length);
+        var amp = Math.abs(seismicData[idx] || 0);
+        
+        if (shadowViz) { shadowViz.update(amp); shadowViz.draw(); }
+        
+        if (granularEngine) {
+            var stats = granularEngine.getStats();
+            textureEl.textContent = granularEngine.textureCloud && granularEngine.textureCloud.isActive ? Math.round(granularEngine.textureCloud.density) : '\u2014';
+            toneEl.textContent = granularEngine.toneCloud && granularEngine.toneCloud.isActive ? Math.round(granularEngine.toneCloud.density) : '\u2014';
+            rhythmEl.textContent = granularEngine.rhythmCloud && granularEngine.rhythmCloud.isActive ? Math.round(granularEngine.rhythmCloud.triggerProbability * 100) + '%' : '\u2014';
+            filterEl.textContent = stats.filterFreq + 'Hz';
+        }
+        
+        requestAnimationFrame(updateVisualization);
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════════
+    // CONTROL FLOW
+    // ═══════════════════════════════════════════════════════════════════════════
+    
+    function setStatus(msg, isError) {
+        statusEl.innerHTML = '<span style="color: ' + (isError ? '#ff5555' : 'inherit') + '">' + msg + '</span>';
+    }
+    
+    function formatTime(ds) { return new Date(ds).toLocaleString(); }
+    
+    function start() {
+        if (isPlaying) return;
+        startBtn.disabled = true;
+        document.body.classList.add('loading');
+        
+        setStatus('Initializing audio...');
+        initAudio().then(function() {
+            setStatus('Fetching earthquake data...');
+            return fetchLatestEvent();
+        }).then(function(event) {
+            if (!event) { stop(); return; }
+            
+            quakeInfo = {
+                place: event.properties.place || 'Unknown',
+                mag: event.properties.mag || 0,
+                depth: event.geometry.coordinates[2] || 0,
+                time: new Date(event.properties.time).toISOString(),
+                url: event.properties.url || '#',
+                lon: event.geometry.coordinates[0],
+                lat: event.geometry.coordinates[1]
+            };
+            
+            // ── START IMMEDIATELY with synthetic waveform shaped by quake params ──
+            var synthLen = 8192;
+            var synthData = new Float32Array(synthLen);
+            var magScale = Math.max(0.3, Math.min(1.0, quakeInfo.mag / 8));
+            var depthScale = Math.min(1, quakeInfo.depth / 600);
+            for (var i = 0; i < synthLen; i++) {
+                var p = Math.sin(i * (0.1 + magScale * 0.1)) * Math.exp(-i / (1000 + depthScale * 1000));
+                var s = i > 2000 ? Math.sin((i - 2000) * 0.08) * Math.exp(-(i - 2000) / 3000) * 1.5 : 0;
+                var surf = i > 4000 ? (Math.sin((i - 4000) * 0.03) + Math.sin((i - 4000) * 0.05) * 0.5) * Math.exp(-(i - 4000) / 5000) * 0.8 : 0;
+                synthData[i] = (p + s + surf + (Math.random() - 0.5) * 0.05) * magScale;
+            }
+            var maxV = 0;
+            for (var i = 0; i < synthLen; i++) { if (Math.abs(synthData[i]) > maxV) maxV = Math.abs(synthData[i]); }
+            if (maxV > 0) for (var i = 0; i < synthLen; i++) synthData[i] /= maxV;
+            
+            seismicData = Array.from(synthData);
+            
+            initCanvases();
+            shadowViz.setEpicenter(quakeInfo.lon, quakeInfo.lat);
+            
+            var df = Math.min(1, quakeInfo.depth / 600);
+            reverbWet.gain.setTargetAtTime(0.35 + df * 0.35, audioCtx.currentTime, 0.5);
+            delay.delayTime.setTargetAtTime(0.3 + df * 0.35, audioCtx.currentTime, 0.5);
+            delayFeedback.gain.setTargetAtTime(0.35 + df * 0.25, audioCtx.currentTime, 0.5);
+            
+            var rootFreq = parseFloat(rootSelect.value);
+            var scale = scaleSelect.value;
+            
+            granularEngine = new GranularEngine(audioCtx, compressor);
+            granularEngine.loadSeismicData(seismicData);
+            granularEngine.masterGain.connect(reverb);
+            granularEngine.masterGain.connect(delay);
+            granularEngine.start(rootFreq, scale, layerStates);
+            
+            isPlaying = true;
+            masterGain.gain.setTargetAtTime(0.85, audioCtx.currentTime, 2);
+            
+            stopBtn.disabled = false;
+            freezeBtn.disabled = false;
+            document.body.classList.remove('loading');
+            
+            updateVisualization();
+            
+            setStatus(
+                '<span class="magnitude">M' + quakeInfo.mag.toFixed(1) + '</span> \u00B7 ' +
+                '<span class="location">' + quakeInfo.place + '</span><br>' +
+                'Depth: ' + quakeInfo.depth.toFixed(0) + ' km \u00B7 ' + formatTime(quakeInfo.time) + '<br>' +
+                '<span style="color:var(--accent);font-size:0.85em">\u25CF Synthetic \u00B7 fetching real waveform...</span>'
+            );
+            
+            // ── BACKGROUND: fetch real waveform (GeoCSV) and hot-swap when it arrives ──
+            fetchWaveform(quakeInfo.time).then(function(csvText) {
+                if (!csvText || !isPlaying) return;
+                
+                var realData = Array.from(parseGeoCSV(csvText));
+                if (realData.length < 100) return; // sanity check
+                
+                seismicData = realData;
+                if (granularEngine) {
+                    granularEngine.loadSeismicData(seismicData);
+                    console.log('[SOS] Hot-swapped to real waveform: ' + seismicData.length + ' samples');
+                }
+                
+                setStatus(
+                    '<span class="magnitude">M' + quakeInfo.mag.toFixed(1) + '</span> \u00B7 ' +
+                    '<span class="location">' + quakeInfo.place + '</span><br>' +
+                    'Depth: ' + quakeInfo.depth.toFixed(0) + ' km \u00B7 ' + formatTime(quakeInfo.time) + '<br>' +
+                    'Station: ' + CONFIG.station.net + '.' + CONFIG.station.sta + ' \u00B7 ' +
+                    '<a href="' + quakeInfo.url + '" target="_blank" rel="noopener noreferrer">View on USGS</a>'
+                );
+            }).catch(function(e) {
+                console.warn('[SOS] Background waveform fetch failed — continuing with synthetic:', e.message);
+                if (isPlaying) {
+                    setStatus(
+                        '<span class="magnitude">M' + quakeInfo.mag.toFixed(1) + '</span> \u00B7 ' +
+                        '<span class="location">' + quakeInfo.place + '</span><br>' +
+                        'Depth: ' + quakeInfo.depth.toFixed(0) + ' km \u00B7 ' + formatTime(quakeInfo.time) + '<br>' +
+                        '<span style="color:var(--accent);font-size:0.85em">\u25CF Synthetic waveform (EarthScope unavailable)</span>'
+                    );
+                }
+            });
+        }).catch(function(e) {
+            console.error(e);
+            setStatus('Error: ' + e.message, true);
+            stop();
+        });
+    }
+    
+    function stop() {
+        isPlaying = false;
+        isFrozen = false;
+        if (shadowViz) shadowViz.setMuzakMode(false);
+        if (granularEngine) granularEngine.cleanup();
+        granularEngine = null;
+        
+        if (audioCtx) {
+            if (masterGain) masterGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.5);
+            setTimeout(function() { if (audioCtx) { audioCtx.close(); audioCtx = null; } }, 1000);
+        }
+        
+        startBtn.disabled = false;
+        stopBtn.disabled = true;
+        freezeBtn.disabled = true;
+        freezeBtn.classList.remove('frozen');
+        freezeBtn.textContent = 'Muzak';
+        document.body.classList.remove('loading');
+        
+        setStatus('Sonification ended \u00B7 Press Begin to restart');
+        textureEl.textContent = '\u2014';
+        toneEl.textContent = '\u2014';
+        rhythmEl.textContent = '\u2014';
+        filterEl.textContent = '\u2014';
+    }
+    
+    function toggleFreeze() {
+        if (!granularEngine) return;
+        isFrozen = !isFrozen;
+        if (isFrozen) {
+            granularEngine.freeze();
+            if (shadowViz) shadowViz.setMuzakMode(true);
+            freezeBtn.classList.add('frozen');
+            freezeBtn.textContent = 'Unmuzak';
+        } else {
+            granularEngine.unfreeze();
+            if (shadowViz) shadowViz.setMuzakMode(false);
+            freezeBtn.classList.remove('frozen');
+            freezeBtn.textContent = 'Muzak';
+        }
+    }
+    
+    function toggleLayer(layer) {
+        layerStates[layer] = !layerStates[layer];
+        var btn = document.getElementById('toggle' + layer.charAt(0).toUpperCase() + layer.slice(1));
+        if (layerStates[layer]) { btn.classList.add('active'); } else { btn.classList.remove('active'); }
+        if (granularEngine) granularEngine.setLayerActive(layer, layerStates[layer]);
+    }
+    
+    // Event listeners
+    startBtn.onclick = start;
+    stopBtn.onclick = stop;
+    freezeBtn.onclick = toggleFreeze;
+    document.getElementById('toggleTexture').onclick = function() { toggleLayer('texture'); };
+    document.getElementById('toggleTone').onclick = function() { toggleLayer('tone'); };
+    document.getElementById('toggleRhythm').onclick = function() { toggleLayer('rhythm'); };
+    scaleSelect.onchange = function() { if (granularEngine) granularEngine.setScale(this.value); };
+    rootSelect.onchange = function() { if (granularEngine) granularEngine.setRootFreq(parseFloat(this.value)); };
+    stretchSlider.oninput = function() {
+        document.getElementById('stretchValue').textContent = parseFloat(this.value).toFixed(2) + '\u00D7';
+        if (granularEngine) granularEngine.setStretch(parseFloat(this.value));
+    };
+    // [COMPAT] oninput fallback for older IE/Edge - use onchange as backup
+    stretchSlider.onchange = stretchSlider.oninput;
+    reverbSlider.oninput = function() {
+        document.getElementById('reverbValue').textContent = this.value + '%';
+        if (reverbWet && audioCtx) reverbWet.gain.setTargetAtTime(parseInt(this.value) / 100 * 0.7, audioCtx.currentTime, 0.1);
+    };
+    reverbSlider.onchange = reverbSlider.oninput;
+    
+    // [COMPAT] iOS audio unlock - handles both touch and click for all browsers
+    function unlockAudio() {
+        if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+        document.removeEventListener('touchstart', unlockAudio);
+        document.removeEventListener('touchend', unlockAudio);
+        document.removeEventListener('click', unlockAudio);
+    }
+    document.addEventListener('touchstart', unlockAudio, { passive: true });
+    document.addEventListener('touchend', unlockAudio, { passive: true });
+    document.addEventListener('click', unlockAudio, { passive: true });
+    
+    // ═══════════════════════════════════════════════════════════════════════════
+    // INITIAL SETUP - [FIX] Option A: defer to next frame for layout completion
+    // ═══════════════════════════════════════════════════════════════════════════
+    
+    requestAnimationFrame(function() {
+        initCanvases();
+        if (shadowViz) shadowViz.draw();
+        
+        // [COMPAT] Redraw on resize/orientationchange to keep static globe visible
+        // (already handled inside initCanvases, but this ensures the initial draw persists)
+    });
+    
+    console.log('[SOS] SHADOWZONE v3 - Cross-browser compliant + static globe on load');
+    </script>
+</body>
+</html>
