@@ -20,12 +20,6 @@ v3 - 8 Mar 2026: EarthScope cloud migration fix
   - Add 15s fetch timeout for AWS latency resilience
   - Validate SEED record headers before parsing
 
-v5 - 10 Mar 2026: GeoCSV simplification
-  - Replace binary miniSEED parser with plain-text GeoCSV format
-  - Eliminate Steim decoder, binary record parsing, zero-sample handling
-  - 10-line parser replaces ~170 lines of binary decoding
-  - Same instant-start + hot-swap architecture
-
 SeisClaw - SOS is free software: MIT License (https://opensource.org/license/mit)
 -->
 
@@ -1426,29 +1420,195 @@ SeisClaw - SOS is free software: MIT License (https://opensource.org/license/mit
     // SEISMIC DATA
     // ═══════════════════════════════════════════════════════════════════════════
     
-    // ─── GeoCSV waveform parser (replaces binary miniSEED/Steim) ─────────────
-    function parseGeoCSV(text) {
-        try {
-            var lines = text.split('\n');
-            var samples = [];
-            for (var i = 0; i < lines.length; i++) {
-                if (lines[i].charAt(0) === '#' || lines[i].trim() === '') continue;
-                var v = parseFloat(lines[i]);
-                if (!isNaN(v)) samples.push(v);
+    // ─── STEIM1 frame decoder ────────────────────────────────────────────────
+    function decodeSteimFrame(view, frameOffset, encoding, samples, lastSample) {
+        // Reads one 64-byte Steim frame; appends decoded ints to `samples`
+        // Returns updated lastSample value
+        var cn = view.getInt32(frameOffset, false); // channel nibbles word
+        for (var w = 1; w < 16; w++) {
+            var nibble = (cn >>> (30 - w * 2)) & 0x3;
+            var word = view.getInt32(frameOffset + w * 4, false);
+            if (nibble === 0) continue; // special/skip
+            if (encoding === 10) {
+                // STEIM1
+                if (nibble === 1) {
+                    // 4 × 1-byte differences
+                    for (var b = 3; b >= 0; b--) {
+                        var d = (word >> (b * 8)) & 0xFF;
+                        if (d >= 128) d -= 256;
+                        lastSample += d;
+                        samples.push(lastSample);
+                    }
+                } else if (nibble === 2) {
+                    // 2 × 2-byte differences
+                    for (var b = 1; b >= 0; b--) {
+                        var d = (word >> (b * 16)) & 0xFFFF;
+                        if (d >= 32768) d -= 65536;
+                        lastSample += d;
+                        samples.push(lastSample);
+                    }
+                } else if (nibble === 3) {
+                    // 1 × 4-byte difference
+                    lastSample += word;
+                    samples.push(lastSample);
+                }
+            } else {
+                // STEIM2 (encoding === 11)
+                var dnib = (word >>> 30) & 0x3;
+                if (nibble === 1) {
+                    // 4-byte value
+                    lastSample += word;
+                    samples.push(lastSample);
+                } else if (nibble === 2) {
+                    if (dnib === 1) {
+                        // 4 × 8-bit
+                        for (var b = 3; b >= 0; b--) {
+                            var d = (word >> (b * 8)) & 0xFF;
+                            if (d >= 128) d -= 256;
+                            lastSample += d;
+                            samples.push(lastSample);
+                        }
+                    } else if (dnib === 2) {
+                        // 2 × 15-bit
+                        for (var b = 1; b >= 0; b--) {
+                            var v = (word >>> (b === 1 ? 15 : 0)) & 0x7FFF;
+                            if (v >= 16384) v -= 32768;
+                            lastSample += v;
+                            samples.push(lastSample);
+                        }
+                    } else if (dnib === 3) {
+                        // 1 × 30-bit
+                        var v = word & 0x3FFFFFFF;
+                        if (v >= 0x20000000) v -= 0x40000000;
+                        lastSample += v;
+                        samples.push(lastSample);
+                    }
+                } else if (nibble === 3) {
+                    if (dnib === 0) {
+                        // 5 × 6-bit
+                        for (var b = 4; b >= 0; b--) {
+                            var v = (word >>> (b * 6)) & 0x3F;
+                            if (v >= 32) v -= 64;
+                            lastSample += v;
+                            samples.push(lastSample);
+                        }
+                    } else if (dnib === 1) {
+                        // 6 × 5-bit
+                        for (var b = 5; b >= 0; b--) {
+                            var v = (word >>> (b * 5)) & 0x1F;
+                            if (v >= 16) v -= 32;
+                            lastSample += v;
+                            samples.push(lastSample);
+                        }
+                    } else if (dnib === 2) {
+                        // 7 × 4-bit
+                        for (var b = 6; b >= 0; b--) {
+                            var v = (word >>> (b * 4)) & 0x0F;
+                            if (v >= 8) v -= 16;
+                            lastSample += v;
+                            samples.push(lastSample);
+                        }
+                    }
+                }
             }
-            if (samples.length === 0) throw new Error('No samples in GeoCSV response');
-            console.log('[SOS] GeoCSV decoded: ' + samples.length + ' samples');
+        }
+        return lastSample;
+    }
+
+    function parseMiniSEED(buffer) {
+        try {
+            var view = new DataView(buffer);
+            var allSamples = [];
+            var offset = 0;
+            var recordsParsed = 0;
+            var recordsSkipped = 0;
+
+            while (offset + 64 <= buffer.byteLength) {
+                // ── Validate SEED record: first 6 bytes must be ASCII digits/spaces ──
+                var seqChar = view.getUint8(offset);
+                if (seqChar < 0x20 || seqChar > 0x39) {
+                    console.warn('[SOS] Invalid record header at offset ' + offset + ' — stopping parse');
+                    break;
+                }
+
+                // Fixed header fields (SEED v2.4 fixed section = 48 bytes)
+                var numSamples  = view.getUint16(offset + 30, false);
+                var encoding    = view.getUint8(offset + 44);
+                var dataOffset  = view.getUint16(offset + 46, false);
+                var recLenExp   = view.getUint8(offset + 61);
+                var recordLen   = recLenExp > 0 ? Math.pow(2, recLenExp) : 4096;
+
+                // ── Skip zero-sample records (EarthScope cloud no longer strips these) ──
+                if (numSamples === 0) {
+                    recordsSkipped++;
+                    offset += recordLen > 0 ? recordLen : 512;
+                    continue;
+                }
+                recordsParsed++;
+
+                if (dataOffset < 48 || dataOffset >= recordLen) {
+                    offset += recordLen > 0 ? recordLen : 512;
+                    continue;
+                }
+
+                if (encoding === 10 || encoding === 11) {
+                    // STEIM1 (10) or STEIM2 (11) — compressed int32 frames
+                    var numFrames = Math.floor((recordLen - dataOffset) / 64);
+                    var lastSample = 0;
+                    // Grab initial sample from Steim header (word 1 of first frame)
+                    if (dataOffset + 4 <= offset + recordLen && buffer.byteLength >= offset + dataOffset + 8) {
+                        lastSample = view.getInt32(offset + dataOffset + 4, false);
+                    }
+                    for (var f = 0; f < numFrames; f++) {
+                        var fOff = offset + dataOffset + f * 64;
+                        if (fOff + 64 > buffer.byteLength) break;
+                        lastSample = decodeSteimFrame(view, fOff, encoding, allSamples, lastSample);
+                        if (allSamples.length >= numSamples + (f > 0 ? 0 : 0)) {
+                            // Trim to declared sample count after first frame fills it
+                        }
+                    }
+                } else if (encoding === 1) {
+                    // 16-bit signed integers (rare but possible)
+                    for (var i = 0; i < numSamples; i++) {
+                        var p = offset + dataOffset + i * 2;
+                        if (p + 2 > buffer.byteLength) break;
+                        allSamples.push(view.getInt16(p, false));
+                    }
+                } else if (encoding === 3) {
+                    // 32-bit signed integers (uncompressed)
+                    for (var i = 0; i < numSamples; i++) {
+                        var p = offset + dataOffset + i * 4;
+                        if (p + 4 > buffer.byteLength) break;
+                        allSamples.push(view.getInt32(p, false));
+                    }
+                } else if (encoding === 4) {
+                    // 32-bit float
+                    for (var i = 0; i < numSamples; i++) {
+                        var p = offset + dataOffset + i * 4;
+                        if (p + 4 > buffer.byteLength) break;
+                        allSamples.push(view.getFloat32(p, false));
+                    }
+                }
+
+                offset += recordLen > 0 ? recordLen : 512;
+            }
+
+            if (allSamples.length === 0) throw new Error('No samples decoded from MiniSEED (' + recordsSkipped + ' zero-sample records skipped)');
+
+            console.log('[SOS] MiniSEED decoded: ' + allSamples.length + ' samples from ' + recordsParsed + ' records (skipped ' + recordsSkipped + ' zero-sample records)');
+
             var maxVal = 0;
-            for (var i = 0; i < samples.length; i++) {
-                var av = Math.abs(samples[i]);
+            for (var i = 0; i < allSamples.length; i++) {
+                var av = Math.abs(allSamples[i]);
                 if (av > maxVal) maxVal = av;
             }
             if (maxVal === 0) throw new Error('Zero-amplitude waveform');
-            var normalized = new Float32Array(samples.length);
-            for (var i = 0; i < samples.length; i++) normalized[i] = samples[i] / maxVal;
+            var normalized = new Float32Array(allSamples.length);
+            for (var i = 0; i < allSamples.length; i++) normalized[i] = allSamples[i] / maxVal;
             return normalized;
+
         } catch (e) {
-            console.warn('[SOS] GeoCSV parse error — using synthetic fallback:', e.message);
+            console.warn('[SOS] MiniSEED parse error — using synthetic fallback:', e.message);
             var fb = new Float32Array(8192);
             for (var i = 0; i < fb.length; i++) {
                 var p = Math.sin(i * 0.15) * Math.exp(-i / 1500);
@@ -1491,43 +1651,42 @@ SeisClaw - SOS is free software: MIT License (https://opensource.org/license/mit
         ]);
     }
     
-    function fetchWaveform(eventTime, stationIndex) {
+    function fetchMiniSEED(eventTime, stationIndex) {
         stationIndex = stationIndex || 0;
         if (stationIndex >= CONFIG.stations.length) {
-            return Promise.reject(new Error('No waveform data from any station for this event'));
+            return Promise.reject(new Error('No MiniSEED data from any station for this event'));
         }
         var st = CONFIG.stations[stationIndex];
         var startTime = new Date(new Date(eventTime).getTime() - 5000).toISOString();
         var endTime   = new Date(new Date(startTime).getTime() + CONFIG.seismicDurationS * 1000).toISOString();
         var url = 'https://service.earthscope.org/fdsnws/dataselect/1/query' +
             '?net=' + st.net + '&sta=' + st.sta + '&loc=' + st.loc + '&cha=' + st.cha +
-            '&starttime=' + startTime + '&endtime=' + endTime +
-            '&format=geocsv.slist.inline&nodata=404';
+            '&starttime=' + startTime + '&endtime=' + endTime + '&nodata=404';
         console.log('[SOS] Trying station ' + st.net + '.' + st.sta + ' (' + (stationIndex + 1) + '/' + CONFIG.stations.length + ')');
         setStatus('Fetching waveform from ' + st.net + '.' + st.sta + '...');
         return fetchWithTimeout(url, 15000).then(function(res) {
             if (res.status === 204 || res.status === 404) {
                 console.warn('[SOS] ' + st.net + '.' + st.sta + ' returned ' + res.status + ' — trying next station');
-                return fetchWaveform(eventTime, stationIndex + 1);
+                return fetchMiniSEED(eventTime, stationIndex + 1);
             }
             if (!res.ok) {
                 return res.text().then(function(txt) {
                     console.warn('[SOS] ' + st.net + '.' + st.sta + ' error ' + res.status + ': ' + txt.slice(0, 120));
-                    return fetchWaveform(eventTime, stationIndex + 1);
+                    return fetchMiniSEED(eventTime, stationIndex + 1);
                 });
             }
-            return res.text().then(function(txt) {
-                if (txt.length < 20) {
-                    console.warn('[SOS] ' + st.net + '.' + st.sta + ' returned ' + txt.length + ' chars — too small, trying next');
-                    return fetchWaveform(eventTime, stationIndex + 1);
+            return res.arrayBuffer().then(function(buf) {
+                if (buf.byteLength < 64) {
+                    console.warn('[SOS] ' + st.net + '.' + st.sta + ' returned ' + buf.byteLength + ' bytes — too small, trying next');
+                    return fetchMiniSEED(eventTime, stationIndex + 1);
                 }
-                CONFIG.station = st;
-                console.log('[SOS] Got ' + txt.length + ' chars from ' + st.net + '.' + st.sta);
-                return txt;
+                CONFIG.station = st; // record which station succeeded
+                console.log('[SOS] Got ' + buf.byteLength + ' bytes from ' + st.net + '.' + st.sta);
+                return buf;
             });
         }).catch(function(e) {
             console.warn('[SOS] Network error on ' + st.net + '.' + st.sta + ':', e.message);
-            return fetchWaveform(eventTime, stationIndex + 1);
+            return fetchMiniSEED(eventTime, stationIndex + 1);
         });
     }
     
@@ -1718,11 +1877,11 @@ SeisClaw - SOS is free software: MIT License (https://opensource.org/license/mit
                 '<span style="color:var(--accent);font-size:0.85em">\u25CF Synthetic \u00B7 fetching real waveform...</span>'
             );
             
-            // ── BACKGROUND: fetch real waveform (GeoCSV) and hot-swap when it arrives ──
-            fetchWaveform(quakeInfo.time).then(function(csvText) {
-                if (!csvText || !isPlaying) return;
+            // ── BACKGROUND: fetch real MiniSEED and hot-swap when it arrives ──
+            fetchMiniSEED(quakeInfo.time).then(function(miniSEED) {
+                if (!miniSEED || !isPlaying) return;
                 
-                var realData = Array.from(parseGeoCSV(csvText));
+                var realData = Array.from(parseMiniSEED(miniSEED));
                 if (realData.length < 100) return; // sanity check
                 
                 seismicData = realData;
