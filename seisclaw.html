@@ -436,12 +436,12 @@ SeisClaw - SOS is free software: MIT License (https://opensource.org/license/mit
         fetchDays: 30,
         // Primary station + ordered fallbacks tried in sequence if 204/no-data
         stations: [
-            { net: "IU", sta: "ANMO", loc: "00", cha: "BHZ" },
-            { net: "IU", sta: "COLA", loc: "00", cha: "BHZ" },
-            { net: "IU", sta: "GUMO", loc: "00", cha: "BHZ" },
-            { net: "IU", sta: "HNR",  loc: "00", cha: "BHZ" },
-            { net: "IU", sta: "MAJO", loc: "00", cha: "BHZ" },
-            { net: "IU", sta: "MIDW", loc: "00", cha: "BHZ" }
+            { net: "IU", sta: "ANMO", loc: "00", cha: "BHZ", lat: 34.9459,  lon: -106.4572 },
+            { net: "IU", sta: "COLA", loc: "00", cha: "BHZ", lat: 64.8736,  lon: -147.8616 },
+            { net: "IU", sta: "GUMO", loc: "00", cha: "BHZ", lat: 13.5893,  lon: 144.8684 },
+            { net: "IU", sta: "HNR",  loc: "00", cha: "BHZ", lat: -9.4387,  lon: 159.9475 },
+            { net: "IU", sta: "MAJO", loc: "00", cha: "BHZ", lat: 36.5457,  lon: 138.2041 },
+            { net: "IU", sta: "MIDW", loc: "00", cha: "BHZ", lat: 28.2156,  lon: -177.3698 }
         ],
         playbackSpeed: 0.0004,
         cycleDurationS: 25
@@ -545,6 +545,7 @@ SeisClaw - SOS is free software: MIT License (https://opensource.org/license/mit
             
             this.epicenterAngle = -Math.PI / 2;
             this.stationAngle = this.epicenterAngle + Math.PI * 0.44;
+            this.stationName = 'IU.ANMO'; // updated dynamically when station is selected
             this.seismicAmplitude = 0;
             this.rayCount = 20;
             
@@ -683,6 +684,11 @@ SeisClaw - SOS is free software: MIT License (https://opensource.org/license/mit
         setEpicenter(lon, lat) {
             this.epicenterAngle = -Math.PI / 2 + (lon / 180) * Math.PI * 0.25;
             this.calculateRays();
+        }
+        
+        setStation(lon, lat, name) {
+            this.stationAngle = -Math.PI / 2 + (lon / 180) * Math.PI * 0.25;
+            this.stationName = name || 'IU.ANMO';
         }
         
         setMuzakMode(enabled) {
@@ -939,7 +945,7 @@ SeisClaw - SOS is free software: MIT License (https://opensource.org/license/mit
             ctx.fillStyle = '#4aff9e';
             ctx.font = fontSize + 'px -apple-system, BlinkMacSystemFont, monospace';
             ctx.textAlign = 'center';
-            ctx.fillText('IU.ANMO', sx + 18, sy + 22);
+            ctx.fillText(this.stationName, sx + 18, sy + 22);
             
             ctx.fillStyle = 'rgba(255, 100, 100, 0.75)';
             ctx.font = (fontSize - 1) + 'px -apple-system, BlinkMacSystemFont, monospace';
@@ -1846,6 +1852,7 @@ SeisClaw - SOS is free software: MIT License (https://opensource.org/license/mit
             
             initCanvases();
             shadowViz.setEpicenter(quakeInfo.lon, quakeInfo.lat);
+            shadowViz.setStation(CONFIG.station.lon, CONFIG.station.lat, CONFIG.station.net + '.' + CONFIG.station.sta);
             
             var df = Math.min(1, quakeInfo.depth / 600);
             reverbWet.gain.setTargetAtTime(0.35 + df * 0.35, audioCtx.currentTime, 0.5);
@@ -1888,6 +1895,11 @@ SeisClaw - SOS is free software: MIT License (https://opensource.org/license/mit
                 if (granularEngine) {
                     granularEngine.loadSeismicData(seismicData);
                     console.log('[SOS] Hot-swapped to real waveform: ' + seismicData.length + ' samples');
+                }
+                
+                // Update station marker on globe to the station that delivered data
+                if (shadowViz) {
+                    shadowViz.setStation(CONFIG.station.lon, CONFIG.station.lat, CONFIG.station.net + '.' + CONFIG.station.sta);
                 }
                 
                 setStatus(
