@@ -546,6 +546,7 @@ SeisClaw - SOS is free software: MIT License (https://opensource.org/license/mit
             this.epicenterAngle = -Math.PI / 2;
             this.stationAngle = this.epicenterAngle + Math.PI * 0.44;
             this.stationName = 'IU.ANMO'; // updated dynamically when station is selected
+            this.showStation = false;    // hidden until playback starts
             this.seismicAmplitude = 0;
             this.rayCount = 20;
             
@@ -751,7 +752,7 @@ SeisClaw - SOS is free software: MIT License (https://opensource.org/license/mit
             this.drawRays();
             this.drawWavefronts();
             this.drawEpicenter();
-            this.drawStation();
+            if (this.showStation) this.drawStation();
             this.drawLabels();
             
             // Draw note indicators when in MUZAK mode
@@ -940,12 +941,15 @@ SeisClaw - SOS is free software: MIT License (https://opensource.org/license/mit
             var ctx = this.ctx;
             var fontSize = Math.max(8, Math.min(9, this.w * 0.015));
             
-            var sx = this.cx + this.R * Math.cos(this.stationAngle);
-            var sy = this.cy + this.R * Math.sin(this.stationAngle);
-            ctx.fillStyle = '#4aff9e';
-            ctx.font = fontSize + 'px -apple-system, BlinkMacSystemFont, monospace';
-            ctx.textAlign = 'center';
-            ctx.fillText(this.stationName, sx + 18, sy + 22);
+            // Station label — only visible during playback
+            if (this.showStation) {
+                var sx = this.cx + this.R * Math.cos(this.stationAngle);
+                var sy = this.cy + this.R * Math.sin(this.stationAngle);
+                ctx.fillStyle = '#4aff9e';
+                ctx.font = fontSize + 'px -apple-system, BlinkMacSystemFont, monospace';
+                ctx.textAlign = 'center';
+                ctx.fillText(this.stationName, sx + 18, sy + 22);
+            }
             
             ctx.fillStyle = 'rgba(255, 100, 100, 0.75)';
             ctx.font = (fontSize - 1) + 'px -apple-system, BlinkMacSystemFont, monospace';
@@ -1869,6 +1873,7 @@ SeisClaw - SOS is free software: MIT License (https://opensource.org/license/mit
             granularEngine.start(rootFreq, scale, layerStates);
             
             isPlaying = true;
+            if (shadowViz) shadowViz.showStation = true;
             masterGain.gain.setTargetAtTime(0.85, audioCtx.currentTime, 2);
             
             stopBtn.disabled = false;
@@ -1930,7 +1935,7 @@ SeisClaw - SOS is free software: MIT License (https://opensource.org/license/mit
     function stop() {
         isPlaying = false;
         isFrozen = false;
-        if (shadowViz) shadowViz.setMuzakMode(false);
+        if (shadowViz) { shadowViz.setMuzakMode(false); shadowViz.showStation = false; }
         if (granularEngine) granularEngine.cleanup();
         granularEngine = null;
         
