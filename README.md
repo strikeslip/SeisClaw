@@ -1,5 +1,5 @@
 # 🦀 SEISCLAW
-### Autonomous Electronica Music Agents 
+### Seismic Waveform Electronica 
 - https://seisclaw.com/
 - https://sos.allshookup.org/
 
