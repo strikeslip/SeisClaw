@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SEISCLAW v3 — System Schematics</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    background: #ffffff;
+    color: #1a1a1a;
+    padding: 40px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 48px;
+}
+
+.card {
+    width: 100%;
+    max-width: 720px;
+    background: #ffffff;
+    border: 1px solid rgba(0,0,0,0.08);
+    border-radius: 12px;
+    padding: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+.card svg { display: block; width: 100%; height: auto; }
+
+/* ─── Visualizer light-mode color system ─────────────────────────
+   Fill  = 50 stop (lightest)
+   Stroke = 600 stop
+   Title text (th) = 800 stop
+   Subtitle text (ts) = 600 stop
+   ─────────────────────────────────────────────────────────────── */
+
+/* Purple */
+.c-purple rect  { fill: #EEEDFE; stroke: #534AB7; stroke-width: 0.5; }
+.c-purple text.th { fill: #3C3489; }
+.c-purple text.ts { fill: #534AB7; }
+
+/* Teal */
+.c-teal rect    { fill: #E1F5EE; stroke: #0F6E56; stroke-width: 0.5; }
+.c-teal text.th  { fill: #085041; }
+.c-teal text.ts  { fill: #0F6E56; }
+
+/* Coral */
+.c-coral rect   { fill: #FAECE7; stroke: #993C1D; stroke-width: 0.5; }
+.c-coral text.th { fill: #712B13; }
+.c-coral text.ts { fill: #993C1D; }
+
+/* Red */
+.c-red rect     { fill: #FCEBEB; stroke: #A32D2D; stroke-width: 0.5; }
+.c-red text.th   { fill: #791F1F; }
+.c-red text.ts   { fill: #A32D2D; }
+
+/* Amber */
+.c-amber rect   { fill: #FAEEDA; stroke: #854F0B; stroke-width: 0.5; }
+.c-amber text.th { fill: #633806; }
+.c-amber text.ts { fill: #854F0B; }
+
+/* Blue */
+.c-blue rect    { fill: #E6F1FB; stroke: #185FA5; stroke-width: 0.5; }
+.c-blue text.th  { fill: #0C447C; }
+.c-blue text.ts  { fill: #185FA5; }
+
+/* Gray */
+.c-gray rect    { fill: #F1EFE8; stroke: #5F5E5A; stroke-width: 0.5; }
+.c-gray text.th  { fill: #444441; }
+.c-gray text.ts  { fill: #5F5E5A; }
+
+/* Green */
+.c-green rect   { fill: #EAF3DE; stroke: #3B6D11; stroke-width: 0.5; }
+.c-green text.th { fill: #27500A; }
+.c-green text.ts { fill: #3B6D11; }
+
+/* Pink */
+.c-pink rect    { fill: #FBEAF0; stroke: #993556; stroke-width: 0.5; }
+.c-pink text.th  { fill: #72243E; }
+.c-pink text.ts  { fill: #993556; }
+
+/* ─── Default text ─── */
+text.th { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; font-size: 14px; font-weight: 500; fill: #1a1a1a; }
+text.ts { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; font-size: 12px; font-weight: 400; fill: #6a6a6a; }
+
+/* ─── Arrows ─── */
+.arr { stroke: #6a6a6a; stroke-width: 1.5; }
+
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SCHEMATIC 1 — SYSTEM ARCHITECTURE
+     ═══════════════════════════════════════════════════════════════ -->
+
+<div class="card">
+<svg viewBox="0 0 680 820" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<marker id="a1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker>
+</defs>
+
+<text class="th" x="340" y="30" text-anchor="middle" style="font-size:15px">SEISCLAW v3 — system architecture</text>
+<text class="ts" x="340" y="48" text-anchor="middle">Seismic waveform electronica — data pipeline to sound</text>
+
+<g class="c-coral">
+<rect x="40" y="74" width="600" height="120" rx="16"/>
+<text class="th" x="340" y="96" text-anchor="middle">Layer 0 — external data sources</text>
+</g>
+
+<g class="c-red">
+<rect x="68" y="108" width="170" height="56" rx="8"/>
+<text class="th" x="153" y="128" text-anchor="middle" dominant-baseline="central">USGS FDSN API</text>
+<text class="ts" x="153" y="148" text-anchor="middle" dominant-baseline="central">GeoJSON event catalog</text>
+</g>
+
+<g class="c-red">
+<rect x="256" y="108" width="178" height="56" rx="8"/>
+<text class="th" x="345" y="128" text-anchor="middle" dominant-baseline="central">EarthScope FDSN</text>
+<text class="ts" x="345" y="148" text-anchor="middle" dominant-baseline="central">MiniSEED waveforms</text>
+</g>
+
+<g class="c-amber">
+<rect x="452" y="108" width="170" height="56" rx="8"/>
+<text class="th" x="537" y="128" text-anchor="middle" dominant-baseline="central">Station fallback</text>
+<text class="ts" x="537" y="148" text-anchor="middle" dominant-baseline="central">6 IU stations in chain</text>
+</g>
+
+<line x1="153" y1="194" x2="153" y2="230" class="arr" marker-end="url(#a1)" stroke="#993C1D"/>
+<line x1="345" y1="194" x2="345" y2="230" class="arr" marker-end="url(#a1)" stroke="#993C1D"/>
+
+<g class="c-purple">
+<rect x="40" y="230" width="600" height="150" rx="16"/>
+<text class="th" x="340" y="252" text-anchor="middle">Layer 1 — data processing</text>
+</g>
+
+<g class="c-purple">
+<rect x="68" y="268" width="170" height="56" rx="8"/>
+<text class="th" x="153" y="288" text-anchor="middle" dominant-baseline="central">MiniSEED parser</text>
+<text class="ts" x="153" y="308" text-anchor="middle" dominant-baseline="central">Steim1/2 decoder</text>
+</g>
+
+<g class="c-purple">
+<rect x="256" y="268" width="178" height="56" rx="8"/>
+<text class="th" x="345" y="288" text-anchor="middle" dominant-baseline="central">Synthetic fallback</text>
+<text class="ts" x="345" y="308" text-anchor="middle" dominant-baseline="central">Instant-start → hot-swap</text>
+</g>
+
+<g class="c-purple">
+<rect x="452" y="268" width="170" height="56" rx="8"/>
+<text class="th" x="537" y="288" text-anchor="middle" dominant-baseline="central">Normalization</text>
+<text class="ts" x="537" y="308" text-anchor="middle" dominant-baseline="central">Float32 ±1.0 range</text>
+</g>
+
+<text class="ts" x="340" y="355" text-anchor="middle">Zero-crossing detection + derivative + RMS analysis</text>
+
+<line x1="340" y1="380" x2="340" y2="416" class="arr" marker-end="url(#a1)" stroke="#534AB7"/>
+
+<g class="c-teal">
+<rect x="40" y="416" width="600" height="186" rx="16"/>
+<text class="th" x="340" y="438" text-anchor="middle">Layer 2 — granular synthesis engine (Web Audio API)</text>
+</g>
+
+<g class="c-coral">
+<rect x="60" y="456" width="170" height="56" rx="8"/>
+<text class="th" x="145" y="476" text-anchor="middle" dominant-baseline="central">TextureCloud</text>
+<text class="ts" x="145" y="496" text-anchor="middle" dominant-baseline="central">sine, 45 density, fast</text>
+</g>
+
+<g class="c-teal">
+<rect x="256" y="456" width="168" height="56" rx="8"/>
+<text class="th" x="340" y="476" text-anchor="middle" dominant-baseline="central">ToneCloud</text>
+<text class="ts" x="340" y="496" text-anchor="middle" dominant-baseline="central">triangle, 6 density, slow</text>
+</g>
+
+<g class="c-blue">
+<rect x="450" y="456" width="172" height="56" rx="8"/>
+<text class="th" x="536" y="476" text-anchor="middle" dominant-baseline="central">RhythmCloud</text>
+<text class="ts" x="536" y="496" text-anchor="middle" dominant-baseline="central">sawtooth, zero-crossings</text>
+</g>
+
+<text class="ts" x="340" y="540" text-anchor="middle">Each cloud: Osc → BiquadFilter → GainEnv → StereoPanner → dest</text>
+<text class="ts" x="340" y="558" text-anchor="middle">Seismic modulation: amplitude, derivative, RMS → density, freq, spread</text>
+<text class="ts" x="340" y="576" text-anchor="middle">Scale quantization: pentatonic, minor, dorian, harmonic, fifths</text>
+
+<line x1="200" y1="602" x2="200" y2="638" class="arr" marker-end="url(#a1)" stroke="#0F6E56"/>
+<line x1="340" y1="602" x2="340" y2="638" class="arr" marker-end="url(#a1)" stroke="#0F6E56"/>
+<line x1="480" y1="602" x2="480" y2="638" class="arr" marker-end="url(#a1)" stroke="#0F6E56"/>
+
+<g class="c-gray">
+<rect x="40" y="638" width="600" height="70" rx="16"/>
+<text class="th" x="340" y="662" text-anchor="middle">Layer 3 — effects chain</text>
+<text class="ts" x="340" y="682" text-anchor="middle">Master filter → Compressor → Convolution reverb + Delay → Master gain → Speakers</text>
+</g>
+
+<path d="M340 708 L340 730 L50 730 L50 762" fill="none" class="arr" marker-end="url(#a1)" stroke="#5F5E5A"/>
+<path d="M340 708 L340 762" fill="none" class="arr" marker-end="url(#a1)" stroke="#5F5E5A"/>
+<path d="M340 708 L340 730 L620 730 L620 762" fill="none" class="arr" marker-end="url(#a1)" stroke="#5F5E5A"/>
+
+<g class="c-amber">
+<rect x="40" y="762" width="160" height="44" rx="8"/>
+<text class="th" x="120" y="784" text-anchor="middle" dominant-baseline="central">ShadowZone viz</text>
+</g>
+
+<g class="c-gray">
+<rect x="260" y="762" width="160" height="44" rx="8"/>
+<text class="th" x="340" y="784" text-anchor="middle" dominant-baseline="central">User controls</text>
+</g>
+
+<g class="c-green">
+<rect x="480" y="762" width="160" height="44" rx="8"/>
+<text class="th" x="560" y="784" text-anchor="middle" dominant-baseline="central">MUZAK mode</text>
+</g>
+
+</svg>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SCHEMATIC 2 — DATA PIPELINE
+     ═══════════════════════════════════════════════════════════════ -->
+
+<div class="card">
+<svg viewBox="0 0 680 740" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<marker id="a2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker>
+</defs>
+
+<text class="th" x="340" y="30" text-anchor="middle" style="font-size:15px">Data pipeline — instant-start with background hot-swap</text>
+
+<g class="c-gray">
+<rect x="260" y="54" width="160" height="44" rx="8"/>
+<text class="th" x="340" y="76" text-anchor="middle" dominant-baseline="central">User clicks Begin</text>
+</g>
+
+<line x1="340" y1="98" x2="340" y2="128" class="arr" marker-end="url(#a2)" stroke="#5F5E5A"/>
+
+<g class="c-purple">
+<rect x="230" y="128" width="220" height="44" rx="8"/>
+<text class="th" x="340" y="150" text-anchor="middle" dominant-baseline="central">Init AudioContext (44.1kHz)</text>
+</g>
+
+<line x1="340" y1="172" x2="340" y2="202" class="arr" marker-end="url(#a2)" stroke="#534AB7"/>
+
+<g class="c-red">
+<rect x="200" y="202" width="280" height="56" rx="8"/>
+<text class="th" x="340" y="222" text-anchor="middle" dominant-baseline="central">Fetch USGS FDSN event query</text>
+<text class="ts" x="340" y="242" text-anchor="middle" dominant-baseline="central">M6.0+ last 30 days, GeoJSON</text>
+</g>
+
+<line x1="340" y1="258" x2="340" y2="290" class="arr" marker-end="url(#a2)" stroke="#A32D2D"/>
+
+<text class="ts" x="340" y="285" text-anchor="middle">Extract: mag, depth, lon/lat, time</text>
+
+<line x1="340" y1="296" x2="180" y2="332" fill="none" class="arr" marker-end="url(#a2)" stroke="#854F0B"/>
+<line x1="340" y1="296" x2="500" y2="332" fill="none" class="arr" marker-end="url(#a2)" stroke="#A32D2D"/>
+
+<text class="ts" x="188" y="318" text-anchor="middle" fill="#854F0B" font-weight="500">Immediate</text>
+<text class="ts" x="508" y="318" text-anchor="middle" fill="#A32D2D" font-weight="500">Background</text>
+
+<g class="c-amber">
+<rect x="60" y="332" width="230" height="72" rx="8"/>
+<text class="th" x="175" y="352" text-anchor="middle" dominant-baseline="central">Generate synthetic waveform</text>
+<text class="ts" x="175" y="372" text-anchor="middle" dominant-baseline="central">P-wave: sin × exp decay</text>
+<text class="ts" x="175" y="388" text-anchor="middle" dominant-baseline="central">S + Surface: delayed onset</text>
+</g>
+
+<g class="c-red">
+<rect x="390" y="332" width="240" height="72" rx="8"/>
+<text class="th" x="510" y="352" text-anchor="middle" dominant-baseline="central">Fetch EarthScope MiniSEED</text>
+<text class="ts" x="510" y="372" text-anchor="middle" dominant-baseline="central">ANMO → COLA → GUMO →</text>
+<text class="ts" x="510" y="388" text-anchor="middle" dominant-baseline="central">HNR → MAJO → MIDW</text>
+</g>
+
+<line x1="175" y1="404" x2="175" y2="440" class="arr" marker-end="url(#a2)" stroke="#854F0B"/>
+
+<g class="c-teal">
+<rect x="60" y="440" width="230" height="56" rx="8"/>
+<text class="th" x="175" y="460" text-anchor="middle" dominant-baseline="central">Start granular engine</text>
+<text class="ts" x="175" y="480" text-anchor="middle" dominant-baseline="central">Sound begins instantly</text>
+</g>
+
+<line x1="510" y1="404" x2="510" y2="440" class="arr" marker-end="url(#a2)" stroke="#A32D2D"/>
+
+<g class="c-purple">
+<rect x="390" y="440" width="240" height="72" rx="8"/>
+<text class="th" x="510" y="460" text-anchor="middle" dominant-baseline="central">Parse MiniSEED binary</text>
+<text class="ts" x="510" y="480" text-anchor="middle" dominant-baseline="central">Validate SEED headers</text>
+<text class="ts" x="510" y="496" text-anchor="middle" dominant-baseline="central">Steim1/2 frame decode</text>
+</g>
+
+<line x1="510" y1="512" x2="510" y2="548" class="arr" marker-end="url(#a2)" stroke="#534AB7"/>
+
+<g class="c-purple">
+<rect x="400" y="548" width="220" height="56" rx="8"/>
+<text class="th" x="510" y="568" text-anchor="middle" dominant-baseline="central">Normalize → Float32</text>
+<text class="ts" x="510" y="588" text-anchor="middle" dominant-baseline="central">Skip zero-sample records</text>
+</g>
+
+<path d="M400 576 L290 576 L290 530 L175 530 L175 496" fill="none" marker-end="url(#a2)" stroke="#0F6E56" stroke-width="2"/>
+
+<text class="th" x="220" y="545" text-anchor="start" fill="#0F6E56">HOT-SWAP</text>
+<text class="ts" x="220" y="562" text-anchor="start" fill="#0F6E56">Real data replaces synthetic</text>
+<text class="ts" x="220" y="578" text-anchor="start" fill="#0F6E56">in running engine — no gap</text>
+
+<line x1="175" y1="496" x2="175" y2="640" class="arr" marker-end="url(#a2)" stroke="#0F6E56"/>
+
+<g class="c-teal">
+<rect x="60" y="640" width="560" height="76" rx="12"/>
+<text class="th" x="340" y="664" text-anchor="middle">Seismic modulation loop (requestAnimationFrame)</text>
+<text class="ts" x="340" y="684" text-anchor="middle">Playhead advances → sample amplitude, derivative, RMS → modulate all 3 clouds</text>
+<text class="ts" x="340" y="700" text-anchor="middle">MUZAK mode: freeze playhead, increase density + grain duration</text>
+</g>
+
+</svg>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SCHEMATIC 3 — AUDIO SIGNAL CHAIN
+     ═══════════════════════════════════════════════════════════════ -->
+
+<div class="card">
+<svg viewBox="0 0 680 580" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<marker id="a3" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker>
+</defs>
+
+<text class="th" x="340" y="30" text-anchor="middle" style="font-size:15px">Audio signal chain — Web Audio API graph</text>
+
+<g class="c-coral">
+<rect x="40" y="54" width="190" height="170" rx="12"/>
+<text class="th" x="135" y="78" text-anchor="middle">TextureCloud</text>
+<text class="ts" x="135" y="98" text-anchor="middle">Waveform: sine</text>
+<text class="ts" x="135" y="114" text-anchor="middle">Density: 35–95 grains/s</text>
+<text class="ts" x="135" y="130" text-anchor="middle">Duration: 35ms</text>
+<text class="ts" x="135" y="146" text-anchor="middle">Freq: root×4 ± spread</text>
+<text class="ts" x="135" y="162" text-anchor="middle">Pan: ±1.0 stereo</text>
+<text class="ts" x="135" y="178" text-anchor="middle">Filter: 6kHz LP</text>
+<text class="ts" x="135" y="198" text-anchor="middle">Seismic → density, spread</text>
+</g>
+
+<g class="c-teal">
+<rect x="245" y="54" width="190" height="170" rx="12"/>
+<text class="th" x="340" y="78" text-anchor="middle">ToneCloud</text>
+<text class="ts" x="340" y="98" text-anchor="middle">Waveform: triangle</text>
+<text class="ts" x="340" y="114" text-anchor="middle">Density: 5–15 grains/s</text>
+<text class="ts" x="340" y="130" text-anchor="middle">Duration: 300ms</text>
+<text class="ts" x="340" y="146" text-anchor="middle">Freq: root ± spread</text>
+<text class="ts" x="340" y="162" text-anchor="middle">Pan: ±0.35 center</text>
+<text class="ts" x="340" y="178" text-anchor="middle">Filter: 3kHz LP, Q=2</text>
+<text class="ts" x="340" y="198" text-anchor="middle">Seismic → density, amp</text>
+</g>
+
+<g class="c-blue">
+<rect x="450" y="54" width="190" height="170" rx="12"/>
+<text class="th" x="545" y="78" text-anchor="middle">RhythmCloud</text>
+<text class="ts" x="545" y="98" text-anchor="middle">Waveform: sawtooth</text>
+<text class="ts" x="545" y="114" text-anchor="middle">Density: 14 grains/s</text>
+<text class="ts" x="545" y="130" text-anchor="middle">Duration: 55ms</text>
+<text class="ts" x="545" y="146" text-anchor="middle">Freq: root×2</text>
+<text class="ts" x="545" y="162" text-anchor="middle">Pan: ±0.7</text>
+<text class="ts" x="545" y="178" text-anchor="middle">Filter: 4kHz LP, Q=3</text>
+<text class="ts" x="545" y="198" text-anchor="middle">Zero-crossings → trigger</text>
+</g>
+
+<text class="ts" x="340" y="248" text-anchor="middle">Each grain: Oscillator → BiquadFilter → GainEnvelope → StereoPanner</text>
+
+<line x1="135" y1="258" x2="135" y2="290" class="arr" marker-end="url(#a3)" stroke="#993C1D"/>
+<line x1="340" y1="258" x2="340" y2="290" class="arr" marker-end="url(#a3)" stroke="#0F6E56"/>
+<line x1="545" y1="258" x2="545" y2="290" class="arr" marker-end="url(#a3)" stroke="#185FA5"/>
+
+<g class="c-purple">
+<rect x="170" y="290" width="340" height="44" rx="8"/>
+<text class="th" x="340" y="312" text-anchor="middle" dominant-baseline="central">Master BiquadFilter (2–8kHz, seismic mod)</text>
+</g>
+
+<line x1="340" y1="334" x2="340" y2="366" class="arr" marker-end="url(#a3)" stroke="#534AB7"/>
+
+<g class="c-gray">
+<rect x="200" y="366" width="280" height="44" rx="8"/>
+<text class="th" x="340" y="388" text-anchor="middle" dominant-baseline="central">DynamicsCompressor (−12dB, 3:1)</text>
+</g>
+
+<line x1="340" y1="410" x2="180" y2="448" fill="none" class="arr" marker-end="url(#a3)" stroke="#5F5E5A"/>
+<line x1="340" y1="410" x2="340" y2="448" fill="none" class="arr" marker-end="url(#a3)" stroke="#5F5E5A"/>
+<line x1="340" y1="410" x2="500" y2="448" fill="none" class="arr" marker-end="url(#a3)" stroke="#5F5E5A"/>
+
+<g class="c-amber">
+<rect x="80" y="448" width="190" height="44" rx="8"/>
+<text class="th" x="175" y="462" text-anchor="middle" dominant-baseline="central">Convolution reverb</text>
+<text class="ts" x="175" y="480" text-anchor="middle" dominant-baseline="central">3.5s IR, depth-scaled</text>
+</g>
+
+<g class="c-gray">
+<rect x="280" y="448" width="120" height="44" rx="8"/>
+<text class="th" x="340" y="470" text-anchor="middle" dominant-baseline="central">Dry path</text>
+</g>
+
+<g class="c-amber">
+<rect x="410" y="448" width="190" height="44" rx="8"/>
+<text class="th" x="505" y="462" text-anchor="middle" dominant-baseline="central">Delay + feedback</text>
+<text class="ts" x="505" y="480" text-anchor="middle" dominant-baseline="central">375ms, 38% FB, LP 2.2kHz</text>
+</g>
+
+<line x1="175" y1="492" x2="175" y2="524" class="arr" marker-end="url(#a3)" stroke="#854F0B"/>
+<line x1="340" y1="492" x2="340" y2="524" class="arr" marker-end="url(#a3)" stroke="#5F5E5A"/>
+<line x1="505" y1="492" x2="505" y2="524" class="arr" marker-end="url(#a3)" stroke="#854F0B"/>
+
+<g class="c-green">
+<rect x="170" y="524" width="340" height="44" rx="8"/>
+<text class="th" x="340" y="546" text-anchor="middle" dominant-baseline="central">Master gain → AudioContext.destination</text>
+</g>
+
+</svg>
+</div>
+
+</body>
+</html>
