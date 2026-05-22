@@ -260,4 +260,4 @@ function selectTuning(event) {
   SeisClaw architecture here. 31-TET deep-branch role integrated and routing bug fixed.
 - Cent unit: formalized by Alexander Ellis, 1880s. Scale archives: Scala, Xenharmonic Wiki.
 
-*Earth composes. Code translates. You complete it.*
+## Sweet Love for Planet Earth
